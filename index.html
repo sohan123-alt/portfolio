@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portfolio</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Supabase JS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     NAVIGATION
+════════════════════════════════════════════ -->
+<nav class="navbar" id="navbar">
+  <div class="container nav-inner">
+    <a href="#home" class="nav-brand"><span>&lt;</span>Dev<span>/&gt;</span></a>
+
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#home"     class="nav-link">Home</a></li>
+      <li><a href="#about"    class="nav-link">About</a></li>
+      <li><a href="#skills"   class="nav-link">Skills</a></li>
+      <li><a href="#projects" class="nav-link">Projects</a></li>
+      <li><a href="#contact"  class="nav-link">Contact</a></li>
+      <li><a href="login.html" class="btn btn-ghost btn-sm nav-cta">Admin</a></li>
+    </ul>
+
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════
+     HERO SECTION
+════════════════════════════════════════════ -->
+<section class="hero" id="home">
+  <div class="hero-bg">
+    <div class="hero-bg-blob blob-1"></div>
+    <div class="hero-bg-blob blob-2"></div>
+    <div class="hero-grid"></div>
+  </div>
+
+  <div class="container hero-inner">
+    <!-- Left: Text Content -->
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        Available for work
+      </div>
+
+      <h1 class="hero-title" id="heroName">
+        Hello, I'm <br/><span class="grad-text" id="heroNameSpan">Your Name</span>
+      </h1>
+
+      <p class="hero-sub" id="heroSub">
+        A passionate full-stack developer crafting beautiful, performant digital experiences.
+      </p>
+
+      <div class="hero-ctas">
+        <a href="#projects" class="btn btn-primary" onclick="scrollToSection('projects')">
+          View Projects ↓
+        </a>
+        <a href="#contact" class="btn btn-ghost" onclick="scrollToSection('contact')">
+          Contact Me
+        </a>
+      </div>
+
+      <div class="hero-stats">
+        <div class="hero-stat"><strong>3+</strong><span>Years Exp.</span></div>
+        <div class="hero-stat"><strong id="projectCount">0</strong><span>Projects</span></div>
+        <div class="hero-stat"><strong>100%</strong><span>Committed</span></div>
+      </div>
+    </div>
+
+    <!-- Right: Avatar -->
+    <div class="hero-visual">
+      <div class="hero-avatar-wrap">
+        <div class="hero-avatar-ring-2"></div>
+        <div class="hero-avatar-ring"></div>
+        <div class="hero-orbit-dot"></div>
+        <div class="hero-orbit-dot"></div>
+        <!-- Avatar is injected by JS if profile has image -->
+        <div class="hero-avatar-placeholder" id="heroAvatar">🧑‍💻</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     ABOUT SECTION
+════════════════════════════════════════════ -->
+<section id="about">
+  <div class="container">
+    <div class="about-inner">
+      <!-- Image -->
+      <div class="about-img-wrap reveal">
+        <div class="about-img-placeholder" id="aboutImgWrap">🧑‍💻</div>
+        <div class="about-img-badge">
+          <strong>3+</strong>
+          <span>Years Experience</span>
+        </div>
+      </div>
+
+      <!-- Text -->
+      <div class="about-text reveal">
+        <p class="section-label">About Me</p>
+        <h2 class="section-title">Crafting Code &<br/>Digital Experiences</h2>
+        <p id="aboutBio" style="color:var(--text-muted);margin-bottom:1rem;font-size:1.02rem;">
+          I'm a full-stack developer with a passion for building elegant solutions to complex problems.
+          I specialize in modern web technologies and love to create seamless user experiences.
+        </p>
+        <p style="color:var(--text-muted);font-size:1.02rem;">
+          When I'm not coding, you'll find me exploring new technologies, contributing to open-source projects, or writing about web development.
+        </p>
+        <div style="margin-top:2rem;display:flex;gap:0.75rem;flex-wrap:wrap;">
+          <a href="#contact" class="btn btn-primary" onclick="scrollToSection('contact')">Get In Touch</a>
+          <a href="#projects" class="btn btn-ghost" onclick="scrollToSection('projects')">View My Work</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SKILLS SECTION
+════════════════════════════════════════════ -->
+<section id="skills" class="skills-section">
+  <div class="container">
+    <div class="reveal" style="text-align:center;max-width:560px;margin:0 auto 3rem;">
+      <p class="section-label" style="justify-content:center;">Skills</p>
+      <h2 class="section-title">Technologies I Work With</h2>
+      <p class="section-desc" style="margin:0 auto;">
+        A curated stack of modern tools and frameworks I use to build robust applications.
+      </p>
+    </div>
+
+    <div class="skills-grid">
+      <!-- Static skills — edit freely or load dynamically -->
+      <div class="skill-chip reveal"><span class="skill-chip-icon">⚡</span>JavaScript</div>
+      <div class="skill-chip reveal"><span class="skill-chip-icon">🔷</span>TypeScript</div>
+      <div class="skill-chip reveal"><span class="skill-chip-icon">⚛️</span>React</div>
+      <div class="skill-chip reveal"><span class="skill-chip-icon">🟢</span>Node.js</div>
+      <div class="skill-chip reveal"><span class="skill-chip-icon">🐘</span>PostgreSQL</div>
+      <div class="skill-chip reveal"><span class="skill-chip-icon">🔥</span>Supabase</div>
+      <div class="skill-chip reveal"><span class="skill-chip-icon">🎨</span>CSS / SASS</div>
+      <div class="skill-chip reveal"><span class="skill-chip-icon">🐳</span>Docker</div>
+      <div class="skill-chip reveal"><span class="skill-chip-icon">☁️</span>AWS</div>
+      <div class="skill-chip reveal"><span class="skill-chip-icon">🔧</span>Git / GitHub</div>
+      <div class="skill-chip reveal"><span class="skill-chip-icon">🚀</span>Next.js</div>
+      <div class="skill-chip reveal"><span class="skill-chip-icon">💡</span>REST APIs</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     PROJECTS SECTION
+════════════════════════════════════════════ -->
+<section id="projects">
+  <div class="container">
+    <div class="projects-header reveal">
+      <div>
+        <p class="section-label">Portfolio</p>
+        <h2 class="section-title">Featured Projects</h2>
+        <p class="section-desc">A selection of my recent work — click to learn more.</p>
+      </div>
+      <a href="projects.html" class="btn btn-ghost btn-sm">View All →</a>
+    </div>
+
+    <div class="projects-grid" id="projectsGrid">
+      <!-- Skeleton loaders shown while fetching -->
+      <div class="project-card skeleton-card">
+        <div class="project-img-placeholder" style="background:var(--bg-2);animation:glowPulse 1.5s infinite;"></div>
+        <div class="project-body">
+          <div style="height:18px;background:var(--bg-2);border-radius:4px;margin-bottom:0.6rem;animation:glowPulse 1.5s infinite;"></div>
+          <div style="height:12px;background:var(--bg-2);border-radius:4px;width:70%;animation:glowPulse 1.5s infinite;"></div>
+        </div>
+      </div>
+      <div class="project-card skeleton-card">
+        <div class="project-img-placeholder" style="background:var(--bg-2);animation:glowPulse 1.5s infinite;"></div>
+        <div class="project-body">
+          <div style="height:18px;background:var(--bg-2);border-radius:4px;margin-bottom:0.6rem;animation:glowPulse 1.5s infinite;"></div>
+          <div style="height:12px;background:var(--bg-2);border-radius:4px;width:60%;animation:glowPulse 1.5s infinite;"></div>
+        </div>
+      </div>
+      <div class="project-card skeleton-card">
+        <div class="project-img-placeholder" style="background:var(--bg-2);animation:glowPulse 1.5s infinite;"></div>
+        <div class="project-body">
+          <div style="height:18px;background:var(--bg-2);border-radius:4px;margin-bottom:0.6rem;animation:glowPulse 1.5s infinite;"></div>
+          <div style="height:12px;background:var(--bg-2);border-radius:4px;width:80%;animation:glowPulse 1.5s infinite;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     CONTACT SECTION
+════════════════════════════════════════════ -->
+<section id="contact" class="contact-section">
+  <div class="container">
+    <div class="contact-inner">
+      <!-- Info -->
+      <div class="contact-info reveal">
+        <p class="section-label">Contact</p>
+        <h2 class="section-title">Let's Work<br/>Together</h2>
+        <p>Have a project in mind? Let's talk about it. I'm always open to discussing new opportunities.</p>
+        <div class="contact-items">
+          <div class="contact-item">
+            <div class="contact-item-icon">📧</div>
+            <div class="contact-item-text">
+              <span>Email</span>
+              <strong>hello@yoursite.com</strong>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-item-icon">📍</div>
+            <div class="contact-item-text">
+              <span>Location</span>
+              <strong>Your City, Country</strong>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-item-icon">🔗</div>
+            <div class="contact-item-text">
+              <span>LinkedIn</span>
+              <strong>linkedin.com/in/yourprofile</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <div class="contact-form glass-card reveal">
+        <h3 style="font-family:var(--font-display);font-size:1.1rem;margin-bottom:1.5rem;">Send a Message</h3>
+        <form id="contactForm" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="cName">Name</label>
+              <input type="text" id="cName" name="name" class="form-control" placeholder="John Doe" required />
+              <span class="field-error">Name is required.</span>
+            </div>
+            <div class="form-group">
+              <label for="cEmail">Email</label>
+              <input type="email" id="cEmail" name="email" class="form-control" placeholder="john@example.com" required />
+              <span class="field-error">Valid email required.</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="cMsg">Message</label>
+            <textarea id="cMsg" name="message" class="form-control" placeholder="Tell me about your project…" required></textarea>
+            <span class="field-error">Message is required.</span>
+          </div>
+          <button type="submit" class="btn btn-primary" id="contactBtn" style="width:100%;justify-content:center;">
+            Send Message ✉️
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════ -->
+<footer class="footer">
+  <div class="container">
+    <p>Built with ❤️ using <a href="https://supabase.com">Supabase</a> &amp; vanilla JS &nbsp;·&nbsp;
+      <a href="login.html">Admin Panel</a>
+    </p>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════
+     SCRIPTS
+════════════════════════════════════════════ -->
+<script src="js/supabase.js"></script>
+<script src="js/app.js"></script>
+<script>
+/* ── index.js (inline for simplicity) ─────────────────────── */
+
+// ── Navbar scroll effect ──────────────────────────────────────
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+  navbar.classList.toggle('scrolled', window.scrollY > 40);
+}, { passive: true });
+
+// ── Mobile nav toggle ─────────────────────────────────────────
+const navToggle = document.getElementById('navToggle');
+const navLinks  = document.getElementById('navLinks');
+navToggle.addEventListener('click', () => {
+  navLinks.classList.toggle('open');
+});
+// Close on link click
+navLinks.querySelectorAll('a').forEach(a => {
+  a.addEventListener('click', () => navLinks.classList.remove('open'));
+});
+
+// ── Load Profile ──────────────────────────────────────────────
+async function loadProfile() {
+  const { data, error } = await fetchProfile();
+  if (error || !data) return;
+
+  // Hero name
+  const nameSpan = document.getElementById('heroNameSpan');
+  if (data.name) nameSpan.textContent = data.name;
+
+  // Hero sub (bio)
+  if (data.bio) {
+    document.getElementById('heroSub').textContent = data.bio;
+    document.getElementById('aboutBio').textContent = data.bio;
+  }
+
+  // Hero avatar
+  if (data.image_url) {
+    const wrap = document.getElementById('heroAvatar');
+    wrap.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = data.image_url;
+    img.alt = data.name ?? 'Profile';
+    img.className = 'hero-avatar';
+    wrap.appendChild(img);
+    wrap.classList.remove('hero-avatar-placeholder');
+
+    // About image
+    const aboutWrap = document.getElementById('aboutImgWrap');
+    aboutWrap.innerHTML = '';
+    const aImg = document.createElement('img');
+    aImg.src = data.image_url;
+    aImg.alt = data.name ?? '';
+    aImg.className = 'about-img';
+    aboutWrap.appendChild(aImg);
+    aboutWrap.classList.remove('about-img-placeholder');
+  }
+}
+
+// ── Load Projects ─────────────────────────────────────────────
+async function loadProjects() {
+  const grid = document.getElementById('projectsGrid');
+  const { data, error } = await fetchProjects();
+
+  grid.innerHTML = '';
+
+  if (error || !data?.length) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">🚀</div>
+        <p>No projects yet. Add some from the admin panel.</p>
+      </div>`;
+    return;
+  }
+
+  // Update hero project count
+  document.getElementById('projectCount').textContent = data.length;
+
+  // Show max 6 on homepage
+  const featured = data.slice(0, 6);
+  featured.forEach(p => {
+    const card = createProjectCard(p);
+    grid.appendChild(card);
+  });
+
+  // Re-run reveal observer for new cards
+  initRevealAnimations();
+}
+
+/** Build a project card DOM element */
+function createProjectCard(p) {
+  const card = document.createElement('div');
+  card.className = 'project-card reveal';
+
+  const imgHtml = p.image_url
+    ? `<img class="project-img" src="${p.image_url}" alt="${escHtml(p.title)}" loading="lazy"/>`
+    : `<div class="project-img-placeholder">🖼️</div>`;
+
+  card.innerHTML = `
+    ${imgHtml}
+    <div class="project-body">
+      <h3 class="project-title">${escHtml(p.title)}</h3>
+      <p class="project-desc">${escHtml(p.description ?? '')}</p>
+    </div>`;
+  return card;
+}
+
+// ── Contact Form ──────────────────────────────────────────────
+const contactForm = document.getElementById('contactForm');
+const contactBtn  = document.getElementById('contactBtn');
+
+contactForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  clearValidation(contactForm);
+  if (!validateForm(contactForm)) return;
+
+  // Extra email validation
+  const emailInput = document.getElementById('cEmail');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value)) {
+    emailInput.classList.add('input-error');
+    emailInput.nextElementSibling.style.display = 'block';
+    return;
+  }
+
+  setBtnLoading(contactBtn, true, 'Sending…');
+
+  const { error } = await insertMessage({
+    name:    document.getElementById('cName').value.trim(),
+    email:   emailInput.value.trim(),
+    message: document.getElementById('cMsg').value.trim(),
+  });
+
+  setBtnLoading(contactBtn, false);
+
+  if (error) {
+    showToast('Failed to send message. Please try again.', 'error');
+  } else {
+    showToast('Message sent! I\'ll get back to you soon. 🎉', 'success');
+    contactForm.reset();
+  }
+});
+
+// ── Utility: escape HTML ──────────────────────────────────────
+function escHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Init ──────────────────────────────────────────────────────
+(async () => {
+  await Promise.all([loadProfile(), loadProjects()]);
+})();
+</script>
+</body>
+</html>
