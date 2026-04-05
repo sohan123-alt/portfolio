@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add / Edit Project · Admin</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="admin-body">
+
+<!-- Sidebar (reused) -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-icon">⚡</div>
+    <div>
+      <div class="sidebar-brand-name">Portfolio</div>
+      <div class="sidebar-brand-sub">Admin Panel</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-section-label">Main</div>
+    <a href="dashboard.html" class="sidebar-link">
+      <span class="sidebar-link-icon">📊</span> Dashboard
+    </a>
+    <a href="add-project.html" class="sidebar-link active">
+      <span class="sidebar-link-icon">➕</span> Add Project
+    </a>
+    <div class="sidebar-section-label">Settings</div>
+    <a href="profile.html" class="sidebar-link">
+      <span class="sidebar-link-icon">👤</span> Edit Profile
+    </a>
+    <a href="messages.html" class="sidebar-link">
+      <span class="sidebar-link-icon">✉️</span> Messages
+    </a>
+    <div class="sidebar-section-label">Site</div>
+    <a href="../index.html" target="_blank" class="sidebar-link">
+      <span class="sidebar-link-icon">🌐</span> View Site
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="sidebar-link btn-danger" id="logoutBtn" style="width:100%;border-radius:var(--radius-sm);">
+      <span class="sidebar-link-icon">🚪</span> Sign Out
+    </button>
+  </div>
+</aside>
+
+<!-- Main Content -->
+<div class="admin-main">
+  <header class="admin-topbar">
+    <button id="sidebarToggle" style="display:none;background:none;border:none;cursor:pointer;color:var(--text);font-size:1.2rem;margin-right:1rem;">☰</button>
+    <span class="admin-topbar-title" id="pageTitle">Add New Project</span>
+    <div class="admin-user">
+      <div class="admin-user-avatar" id="userInitial">A</div>
+      <span id="userEmail"></span>
+    </div>
+  </header>
+
+  <div class="admin-content">
+    <div class="admin-form-wrap">
+      <!-- Breadcrumb -->
+      <div style="margin-bottom:1.5rem;font-size:0.85rem;color:var(--text-muted);">
+        <a href="dashboard.html" style="color:var(--accent);">Dashboard</a>
+        <span style="margin:0 0.4rem;">›</span>
+        <span id="breadcrumbLabel">Add Project</span>
+      </div>
+
+      <div class="page-card">
+        <div class="page-card-header">
+          <span class="page-card-title" id="formTitle">New Project</span>
+        </div>
+        <div class="page-card-body">
+          <form id="projectForm" novalidate>
+            <!-- Hidden: project ID for edit mode -->
+            <input type="hidden" id="projectId" />
+
+            <div class="form-group">
+              <label for="pTitle">Project Title <span style="color:var(--error)">*</span></label>
+              <input type="text" id="pTitle" class="form-control" placeholder="e.g. E-Commerce Platform" required />
+              <span class="field-error">Title is required.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="pDesc">Description <span style="color:var(--error)">*</span></label>
+              <textarea id="pDesc" class="form-control" placeholder="Describe what the project does, tech used, key features…" required style="min-height:140px;"></textarea>
+              <span class="field-error">Description is required.</span>
+            </div>
+
+            <!-- Image Upload -->
+            <div class="form-group">
+              <label>Project Image</label>
+              <div class="file-drop" id="fileDrop">
+                <input type="file" id="imgFile" accept="image/*" />
+                <div class="file-drop-content">
+                  <div style="font-size:2rem;margin-bottom:0.5rem;">📤</div>
+                  <p style="font-weight:500;">Click or drag to upload</p>
+                  <p style="font-size:0.78rem;margin-top:0.25rem;">PNG, JPG, WebP · max 5 MB</p>
+                </div>
+              </div>
+
+              <!-- Image preview -->
+              <div class="img-preview" id="imgPreview">
+                <img id="previewImg" src="" alt="Preview" />
+                <div style="padding:0.5rem 0.75rem;font-size:0.78rem;color:var(--text-muted);display:flex;justify-content:space-between;align-items:center;">
+                  <span id="previewName">image.jpg</span>
+                  <button type="button" id="removeImg" style="background:none;border:none;cursor:pointer;color:var(--error);font-size:0.8rem;">Remove ✕</button>
+                </div>
+              </div>
+
+              <!-- Existing image (edit mode) -->
+              <div id="existingImgWrap" style="display:none;margin-top:0.75rem;">
+                <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.4rem;">Current image:</p>
+                <img id="existingImg" src="" alt="Current" style="max-width:200px;border-radius:var(--radius-sm);border:1px solid var(--border);" />
+                <label style="display:flex;align-items:center;gap:0.5rem;margin-top:0.5rem;font-size:0.82rem;color:var(--text-muted);cursor:pointer;">
+                  <input type="checkbox" id="removeExistingImg" style="accent-color:var(--error);" />
+                  Remove current image
+                </label>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="display:flex;gap:0.75rem;margin-top:1.5rem;">
+              <button type="submit" class="btn btn-primary" id="saveBtn">
+                Save Project
+              </button>
+              <a href="dashboard.html" class="btn btn-ghost">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/supabase.js"></script>
+<script src="../js/app.js"></script>
+<script>
+/* ── Auth guard ─────────────────────────────────────── */
+(async () => {
+  const session = await requireAuth();
+  document.getElementById('userEmail').textContent = session.user.email;
+  document.getElementById('userInitial').textContent =
+    (session.user.email[0] ?? 'A').toUpperCase();
+})();
+
+document.getElementById('logoutBtn').addEventListener('click', () => signOut());
+
+/* ── Mobile sidebar ─────────────────────────────────── */
+const sidebarToggle = document.getElementById('sidebarToggle');
+if (window.innerWidth < 768) sidebarToggle.style.display = 'inline-block';
+sidebarToggle.addEventListener('click', () =>
+  document.getElementById('sidebar').classList.toggle('open')
+);
+
+/* ── Detect edit mode (URL param ?id=…) ─────────────── */
+const urlParams = new URLSearchParams(window.location.search);
+const editId    = urlParams.get('id');
+let existingImageUrl = null;
+
+if (editId) {
+  document.getElementById('pageTitle').textContent     = 'Edit Project';
+  document.getElementById('breadcrumbLabel').textContent = 'Edit Project';
+  document.getElementById('formTitle').textContent      = 'Edit Project';
+  document.getElementById('saveBtn').textContent        = 'Update Project';
+  loadProjectForEdit(editId);
+}
+
+async function loadProjectForEdit(id) {
+  showLoading('Loading project…');
+  const { data, error } = await fetchProject(id);
+  hideLoading();
+
+  if (error || !data) {
+    showToast('Project not found.', 'error');
+    return;
+  }
+
+  document.getElementById('projectId').value = data.id;
+  document.getElementById('pTitle').value    = data.title ?? '';
+  document.getElementById('pDesc').value     = data.description ?? '';
+
+  if (data.image_url) {
+    existingImageUrl = data.image_url;
+    const wrap = document.getElementById('existingImgWrap');
+    document.getElementById('existingImg').src = data.image_url;
+    wrap.style.display = 'block';
+  }
+}
+
+/* ── Image preview ──────────────────────────────────── */
+const imgFile    = document.getElementById('imgFile');
+const imgPreview = document.getElementById('imgPreview');
+const previewImg = document.getElementById('previewImg');
+const previewName = document.getElementById('previewName');
+
+wireImagePreview(imgFile, previewImg, imgPreview);
+imgFile.addEventListener('change', () => {
+  if (imgFile.files[0]) {
+    previewName.textContent = imgFile.files[0].name;
+  }
+});
+
+document.getElementById('removeImg').addEventListener('click', () => {
+  imgFile.value = '';
+  imgPreview.style.display = 'none';
+  previewImg.src = '';
+});
+
+/* ── Drag and drop ──────────────────────────────────── */
+const fileDrop = document.getElementById('fileDrop');
+fileDrop.addEventListener('dragover', e => { e.preventDefault(); fileDrop.classList.add('drag-over'); });
+fileDrop.addEventListener('dragleave', () => fileDrop.classList.remove('drag-over'));
+fileDrop.addEventListener('drop', e => {
+  e.preventDefault();
+  fileDrop.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) {
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    imgFile.files = dt.files;
+    imgFile.dispatchEvent(new Event('change'));
+    previewName.textContent = file.name;
+  }
+});
+
+/* ── Form submit ────────────────────────────────────── */
+const projectForm = document.getElementById('projectForm');
+const saveBtn     = document.getElementById('saveBtn');
+
+projectForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  clearValidation(projectForm);
+  if (!validateForm(projectForm)) return;
+
+  setBtnLoading(saveBtn, true, 'Saving…');
+
+  const title       = document.getElementById('pTitle').value.trim();
+  const description = document.getElementById('pDesc').value.trim();
+  const id          = document.getElementById('projectId').value;
+  const file        = imgFile.files[0];
+  const removeExisting = document.getElementById('removeExistingImg').checked;
+
+  let image_url = existingImageUrl;
+
+  // Handle image removal
+  if (removeExisting && existingImageUrl) {
+    const path = pathFromUrl(existingImageUrl);
+    if (path) await deleteImage(path);
+    image_url = null;
+  }
+
+  // Upload new image if provided
+  if (file) {
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('Image must be under 5 MB.', 'error');
+      setBtnLoading(saveBtn, false);
+      return;
+    }
+    const path = `projects/${uniqueFilename(file)}`;
+    const { url, error: upErr } = await uploadImage(file, path);
+    if (upErr) {
+      showToast('Image upload failed: ' + upErr.message, 'error');
+      setBtnLoading(saveBtn, false);
+      return;
+    }
+    // Delete old image if replacing
+    if (existingImageUrl && !removeExisting) {
+      const oldPath = pathFromUrl(existingImageUrl);
+      if (oldPath) await deleteImage(oldPath);
+    }
+    image_url = url;
+  }
+
+  const payload = { title, description, image_url };
+  let result;
+
+  if (id) {
+    result = await updateProject(id, payload);
+  } else {
+    result = await insertProject(payload);
+  }
+
+  setBtnLoading(saveBtn, false);
+
+  if (result.error) {
+    showToast('Error: ' + result.error.message, 'error');
+  } else {
+    showToast(id ? 'Project updated! ✅' : 'Project created! 🚀', 'success');
+    setTimeout(() => window.location.href = 'dashboard.html', 900);
+  }
+});
+</script>
+</body>
+</html>

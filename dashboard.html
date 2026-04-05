@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard · Admin</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="admin-body">
+
+<!-- ─── Sidebar ──────────────────────────────────────────── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-icon">⚡</div>
+    <div>
+      <div class="sidebar-brand-name">Portfolio</div>
+      <div class="sidebar-brand-sub">Admin Panel</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="sidebar-section-label">Main</div>
+    <a href="dashboard.html" class="sidebar-link active">
+      <span class="sidebar-link-icon">📊</span> Dashboard
+    </a>
+    <a href="add-project.html" class="sidebar-link">
+      <span class="sidebar-link-icon">➕</span> Add Project
+    </a>
+
+    <div class="sidebar-section-label">Settings</div>
+    <a href="profile.html" class="sidebar-link">
+      <span class="sidebar-link-icon">👤</span> Edit Profile
+    </a>
+    <a href="messages.html" class="sidebar-link">
+      <span class="sidebar-link-icon">✉️</span> Messages
+    </a>
+
+    <div class="sidebar-section-label">Site</div>
+    <a href="index.html" target="_blank" class="sidebar-link">
+      <span class="sidebar-link-icon">🌐</span> View Site
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="sidebar-link btn-danger" id="logoutBtn" style="width:100%;border-radius:var(--radius-sm);">
+      <span class="sidebar-link-icon">🚪</span> Sign Out
+    </button>
+  </div>
+</aside>
+
+<!-- ─── Main Content ──────────────────────────────────────── -->
+<div class="admin-main">
+  <!-- Topbar -->
+  <header class="admin-topbar">
+    <button id="sidebarToggle" style="display:none;background:none;border:none;cursor:pointer;color:var(--text);font-size:1.2rem;margin-right:1rem;">☰</button>
+    <span class="admin-topbar-title">Dashboard Overview</span>
+    <div class="admin-user">
+      <div class="admin-user-avatar" id="userInitial">A</div>
+      <span id="userEmail">admin@example.com</span>
+    </div>
+  </header>
+
+  <div class="admin-content">
+    <!-- Stats Row -->
+    <div class="stat-cards">
+      <div class="stat-card glass-card">
+        <div class="stat-card-icon">🚀</div>
+        <div class="stat-card-label">Total Projects</div>
+        <div class="stat-card-value grad-text" id="statProjects">—</div>
+      </div>
+      <div class="stat-card glass-card">
+        <div class="stat-card-icon">✉️</div>
+        <div class="stat-card-label">Messages</div>
+        <div class="stat-card-value grad-text" id="statMessages">—</div>
+      </div>
+      <div class="stat-card glass-card">
+        <div class="stat-card-icon">👤</div>
+        <div class="stat-card-label">Profile</div>
+        <div class="stat-card-value grad-text" id="statProfile">—</div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div style="display:flex;gap:0.75rem;margin-bottom:2rem;flex-wrap:wrap;">
+      <a href="add-project.html" class="btn btn-primary">+ Add Project</a>
+      <a href="profile.html" class="btn btn-ghost">Edit Profile</a>
+      <a href="messages.html" class="btn btn-ghost">View Messages</a>
+    </div>
+
+    <!-- Projects Table -->
+    <div class="page-card">
+      <div class="page-card-header">
+        <span class="page-card-title">All Projects</span>
+        <a href="add-project.html" class="btn btn-primary btn-sm">+ New</a>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="admin-table" id="projectsTable">
+          <thead>
+            <tr>
+              <th>Image</th>
+              <th>Title</th>
+              <th>Description</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="projectsTbody">
+            <tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text-muted);">
+              <div class="loading-spinner" style="margin:0 auto 0.5rem;"></div>Loading…
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Delete Confirm Modal ─────────────────────────────── -->
+<div class="modal-backdrop" id="deleteModal">
+  <div class="modal">
+    <h3 class="modal-title">Delete Project?</h3>
+    <p style="color:var(--text-muted);font-size:0.92rem;">
+      This action cannot be undone. The project and its image will be permanently removed.
+    </p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelDelete">Cancel</button>
+      <button class="btn btn-danger" id="confirmDelete">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script src="supabase.js"></script>
+<script src="app.js"></script>
+<script>
+/* ── Auth guard ─────────────────────────────────────── */
+let currentUser;
+(async () => {
+  const session = await requireAuth();
+  currentUser = session.user;
+  document.getElementById('userEmail').textContent = currentUser.email;
+  document.getElementById('userInitial').textContent =
+    (currentUser.email[0] ?? 'A').toUpperCase();
+})();
+
+/* ── Logout ─────────────────────────────────────────── */
+document.getElementById('logoutBtn').addEventListener('click', () => signOut());
+
+/* ── Mobile sidebar toggle ──────────────────────────── */
+const sidebarToggle = document.getElementById('sidebarToggle');
+const sidebar = document.getElementById('sidebar');
+if (window.innerWidth < 768) sidebarToggle.style.display = 'inline-block';
+sidebarToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+
+/* ── Load stats ─────────────────────────────────────── */
+async function loadStats() {
+  const [projRes, msgRes, profRes] = await Promise.all([
+    fetchProjects(),
+    fetchMessages(),
+    fetchProfile(),
+  ]);
+  document.getElementById('statProjects').textContent = projRes.data?.length ?? 0;
+  document.getElementById('statMessages').textContent = msgRes.data?.length ?? 0;
+  document.getElementById('statProfile').textContent  = profRes.data ? '✓ Set' : 'Not set';
+}
+
+/* ── Load projects table ────────────────────────────── */
+let pendingDeleteId   = null;
+let pendingDeletePath = null;
+
+async function loadProjectsTable() {
+  const tbody = document.getElementById('projectsTbody');
+  const { data, error } = await fetchProjects();
+
+  if (error || !data?.length) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text-muted);">
+      No projects yet. <a href="add-project.html" style="color:var(--accent);">Add one →</a>
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(p => `
+    <tr>
+      <td>
+        ${p.image_url
+          ? `<img src="${p.image_url}" alt="${escHtml(p.title)}" />`
+          : `<div style="width:48px;height:36px;background:var(--bg-2);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🖼️</div>`
+        }
+      </td>
+      <td style="font-weight:600;min-width:160px;">${escHtml(p.title)}</td>
+      <td style="color:var(--text-muted);max-width:300px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">
+        ${escHtml(p.description ?? '')}
+      </td>
+      <td>
+        <div class="admin-actions">
+          <a href="add-project.html?id=${p.id}" class="btn btn-ghost btn-sm">Edit</a>
+          <button class="btn btn-danger btn-sm" onclick="promptDelete(${p.id},'${encodeImagePath(p.image_url)}')">Delete</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function encodeImagePath(url) {
+  if (!url) return '';
+  const path = pathFromUrl(url);
+  return path ? encodeURIComponent(path) : '';
+}
+
+/* ── Delete flow ────────────────────────────────────── */
+function promptDelete(id, encodedPath) {
+  pendingDeleteId   = id;
+  pendingDeletePath = encodedPath ? decodeURIComponent(encodedPath) : null;
+  document.getElementById('deleteModal').classList.add('open');
+}
+
+document.getElementById('cancelDelete').addEventListener('click', () => {
+  document.getElementById('deleteModal').classList.remove('open');
+  pendingDeleteId = pendingDeletePath = null;
+});
+
+document.getElementById('confirmDelete').addEventListener('click', async () => {
+  if (!pendingDeleteId) return;
+  document.getElementById('deleteModal').classList.remove('open');
+  showLoading('Deleting project…');
+
+  // Delete image from storage if exists
+  if (pendingDeletePath) await deleteImage(pendingDeletePath);
+
+  const { error } = await deleteProject(pendingDeleteId);
+  hideLoading();
+
+  if (error) {
+    showToast('Failed to delete project.', 'error');
+  } else {
+    showToast('Project deleted.', 'success');
+    loadProjectsTable();
+    loadStats();
+  }
+  pendingDeleteId = pendingDeletePath = null;
+});
+
+function escHtml(str) {
+  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Init ─────────────────────────────────────────── */
+loadStats();
+loadProjectsTable();
+</script>
+</body>
+</html>
