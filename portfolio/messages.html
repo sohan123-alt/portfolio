@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Messages · Admin</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="admin-body">
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-icon">⚡</div>
+    <div>
+      <div class="sidebar-brand-name">Portfolio</div>
+      <div class="sidebar-brand-sub">Admin Panel</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-section-label">Main</div>
+    <a href="dashboard.html" class="sidebar-link">
+      <span class="sidebar-link-icon">📊</span> Dashboard
+    </a>
+    <a href="add-project.html" class="sidebar-link">
+      <span class="sidebar-link-icon">➕</span> Add Project
+    </a>
+    <div class="sidebar-section-label">Settings</div>
+    <a href="profile.html" class="sidebar-link">
+      <span class="sidebar-link-icon">👤</span> Edit Profile
+    </a>
+    <a href="messages.html" class="sidebar-link active">
+      <span class="sidebar-link-icon">✉️</span> Messages
+    </a>
+    <div class="sidebar-section-label">Site</div>
+    <a href="index.html" target="_blank" class="sidebar-link">
+      <span class="sidebar-link-icon">🌐</span> View Site
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="sidebar-link btn-danger" id="logoutBtn" style="width:100%;border-radius:var(--radius-sm);">
+      <span class="sidebar-link-icon">🚪</span> Sign Out
+    </button>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="admin-main">
+  <header class="admin-topbar">
+    <button id="sidebarToggle" style="display:none;background:none;border:none;cursor:pointer;color:var(--text);font-size:1.2rem;margin-right:1rem;">☰</button>
+    <span class="admin-topbar-title">Contact Messages</span>
+    <div class="admin-user">
+      <div class="admin-user-avatar" id="userInitial">A</div>
+      <span id="userEmail"></span>
+    </div>
+  </header>
+
+  <div class="admin-content">
+    <!-- Stats bar -->
+    <div style="display:flex;gap:1rem;margin-bottom:2rem;flex-wrap:wrap;">
+      <div class="stat-card glass-card" style="flex:1;min-width:160px;">
+        <div class="stat-card-label">Total Messages</div>
+        <div class="stat-card-value grad-text" id="totalMessages">—</div>
+      </div>
+    </div>
+
+    <!-- Messages list -->
+    <div class="page-card">
+      <div class="page-card-header">
+        <span class="page-card-title">All Messages</span>
+        <input
+          type="text"
+          id="searchInput"
+          class="form-control"
+          placeholder="Search…"
+          style="max-width:220px;padding:0.45rem 0.85rem;font-size:0.85rem;"
+        />
+      </div>
+      <div id="messagesList" style="padding:0;">
+        <div style="text-align:center;padding:3rem;color:var(--text-muted);">
+          <div class="loading-spinner" style="margin:0 auto 0.75rem;"></div>
+          Loading messages…
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Message detail modal -->
+<div class="modal-backdrop" id="msgModal">
+  <div class="modal" style="max-width:560px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;">
+      <h3 class="modal-title" id="msgModalTitle">Message from …</h3>
+      <button id="closeMsgModal" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.1rem;">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1rem;">
+      <p style="font-size:0.82rem;color:var(--text-muted);">
+        <strong style="color:var(--text);">From:</strong> <span id="msgFrom"></span>
+      </p>
+      <p style="font-size:0.82rem;color:var(--text-muted);">
+        <strong style="color:var(--text);">Email:</strong>
+        <a id="msgEmail" href="#" style="color:var(--accent);"></a>
+      </p>
+    </div>
+    <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;font-size:0.92rem;line-height:1.7;color:var(--text-muted);" id="msgBody"></div>
+    <div class="modal-actions">
+      <a id="replyLink" href="#" class="btn btn-primary btn-sm">Reply via Email</a>
+      <button id="closeMsgModalBtn" class="btn btn-ghost btn-sm">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/supabase.js"></script>
+<script src="../js/app.js"></script>
+<script>
+/* ── Auth guard ─────────────────────────────────────── */
+(async () => {
+  const session = await requireAuth();
+  document.getElementById('userEmail').textContent = session.user.email;
+  document.getElementById('userInitial').textContent = (session.user.email[0] ?? 'A').toUpperCase();
+})();
+
+document.getElementById('logoutBtn').addEventListener('click', () => signOut());
+
+const sidebarToggle = document.getElementById('sidebarToggle');
+if (window.innerWidth < 768) sidebarToggle.style.display = 'inline-block';
+sidebarToggle.addEventListener('click', () =>
+  document.getElementById('sidebar').classList.toggle('open')
+);
+
+/* ── Load messages ──────────────────────────────────── */
+let allMessages = [];
+
+async function loadMessages() {
+  const { data, error } = await fetchMessages();
+  const list = document.getElementById('messagesList');
+
+  if (error || !data?.length) {
+    list.innerHTML = `
+      <div class="empty-state" style="padding:3rem;">
+        <div class="empty-state-icon">📭</div>
+        <p>No messages yet.</p>
+      </div>`;
+    document.getElementById('totalMessages').textContent = '0';
+    return;
+  }
+
+  allMessages = data;
+  document.getElementById('totalMessages').textContent = data.length;
+  renderMessages(data);
+}
+
+function renderMessages(messages) {
+  const list = document.getElementById('messagesList');
+
+  if (!messages.length) {
+    list.innerHTML = `
+      <div class="empty-state" style="padding:2rem;">
+        <div class="empty-state-icon">🔍</div>
+        <p>No messages match your search.</p>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = messages.map(m => `
+    <div class="msg-item" data-id="${m.id}"
+      style="padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.2s;display:flex;align-items:flex-start;gap:1rem;"
+      onmouseenter="this.style.background='rgba(255,255,255,0.03)'"
+      onmouseleave="this.style.background=''"
+      onclick="openMessage(${m.id})"
+    >
+      <div style="width:42px;height:42px;border-radius:50%;background:rgba(0,229,255,0.08);border:1px solid rgba(0,229,255,0.15);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;color:var(--accent);flex-shrink:0;">
+        ${escHtml((m.name ?? '?')[0]).toUpperCase()}
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:0.25rem;">
+          <strong style="font-size:0.92rem;">${escHtml(m.name ?? 'Anonymous')}</strong>
+          <span style="font-size:0.74rem;color:var(--text-dim);flex-shrink:0;">${formatDate(m.created_at)}</span>
+        </div>
+        <div style="font-size:0.8rem;color:var(--accent);margin-bottom:0.25rem;">${escHtml(m.email ?? '')}</div>
+        <div style="font-size:0.85rem;color:var(--text-muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">
+          ${escHtml(m.message ?? '')}
+        </div>
+      </div>
+      <span style="color:var(--text-dim);font-size:0.9rem;flex-shrink:0;">›</span>
+    </div>
+  `).join('');
+}
+
+function formatDate(iso) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+}
+
+/* ── Open message detail ────────────────────────────── */
+function openMessage(id) {
+  const m = allMessages.find(msg => msg.id === id);
+  if (!m) return;
+
+  document.getElementById('msgModalTitle').textContent = `Message from ${m.name ?? 'Anonymous'}`;
+  document.getElementById('msgFrom').textContent  = m.name ?? 'Anonymous';
+  document.getElementById('msgEmail').textContent = m.email ?? '';
+  document.getElementById('msgEmail').href        = `mailto:${m.email}`;
+  document.getElementById('msgBody').textContent  = m.message ?? '';
+  document.getElementById('replyLink').href       =
+    `mailto:${m.email}?subject=Re: Your message&body=Hi ${m.name},`;
+
+  document.getElementById('msgModal').classList.add('open');
+}
+
+/* ── Close modal ────────────────────────────────────── */
+['closeMsgModal','closeMsgModalBtn'].forEach(id => {
+  document.getElementById(id).addEventListener('click', () => {
+    document.getElementById('msgModal').classList.remove('open');
+  });
+});
+
+/* ── Search ─────────────────────────────────────────── */
+document.getElementById('searchInput').addEventListener('input', e => {
+  const q = e.target.value.toLowerCase();
+  renderMessages(allMessages.filter(m =>
+    (m.name  ?? '').toLowerCase().includes(q) ||
+    (m.email ?? '').toLowerCase().includes(q) ||
+    (m.message ?? '').toLowerCase().includes(q)
+  ));
+});
+
+function escHtml(str) {
+  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+loadMessages();
+</script>
+</body>
+</html>

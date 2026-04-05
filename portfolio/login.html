@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login · Portfolio</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="login-page">
+
+<div class="login-bg"></div>
+
+<div class="login-card">
+  <!-- Logo / Brand -->
+  <div class="login-logo">
+    <div class="login-logo-icon">🔐</div>
+    <h1>Admin Login</h1>
+    <p>Sign in to manage your portfolio</p>
+  </div>
+
+  <!-- Login Form -->
+  <form id="loginForm" novalidate>
+    <div class="form-group">
+      <label for="email">Email Address</label>
+      <input
+        type="email"
+        id="email"
+        class="form-control"
+        placeholder="admin@example.com"
+        required
+        autocomplete="email"
+      />
+      <span class="field-error">Please enter a valid email.</span>
+    </div>
+
+    <div class="form-group">
+      <label for="password">Password</label>
+      <div style="position:relative;">
+        <input
+          type="password"
+          id="password"
+          class="form-control"
+          placeholder="••••••••"
+          required
+          autocomplete="current-password"
+          style="padding-right:3rem;"
+        />
+        <!-- Toggle password visibility -->
+        <button type="button" id="togglePwd"
+          style="position:absolute;right:0.8rem;top:50%;transform:translateY(-50%);
+                 background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1rem;">
+          👁
+        </button>
+      </div>
+      <span class="field-error">Password is required.</span>
+    </div>
+
+    <!-- Error banner -->
+    <div id="loginError"
+      style="display:none;background:rgba(255,83,112,0.1);border:1px solid rgba(255,83,112,0.25);
+             border-radius:var(--radius-sm);padding:0.7rem 1rem;font-size:0.88rem;color:var(--error);margin-bottom:1rem;">
+    </div>
+
+    <button type="submit" class="btn btn-primary" id="loginBtn" style="width:100%;justify-content:center;border-radius:var(--radius-sm);">
+      Sign In
+    </button>
+  </form>
+
+  <div class="divider"></div>
+
+  <p style="text-align:center;font-size:0.82rem;color:var(--text-muted);">
+    <a href="index.html" style="color:var(--accent);">← Back to Portfolio</a>
+  </p>
+
+  <!-- Setup hint -->
+  <div style="margin-top:1.5rem;padding:1rem;background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.12);border-radius:var(--radius-sm);">
+    <p style="font-size:0.78rem;color:var(--text-muted);line-height:1.6;">
+      <strong style="color:var(--accent);">Setup:</strong>
+      Create an admin user in your Supabase project under
+      Authentication → Users, then sign in here.
+    </p>
+  </div>
+</div>
+
+<script src="supabase.js"></script>
+<script src="app.js"></script>
+<script>
+/* ── Redirect if already logged in ─────────────────── */
+(async () => {
+  const session = await getSession();
+  if (session) window.location.href = 'dashboard.html';
+})();
+
+/* ── Toggle password visibility ─────────────────────── */
+document.getElementById('togglePwd').addEventListener('click', () => {
+  const pwd = document.getElementById('password');
+  pwd.type = pwd.type === 'password' ? 'text' : 'password';
+});
+
+/* ── Login form submit ──────────────────────────────── */
+const loginForm  = document.getElementById('loginForm');
+const loginBtn   = document.getElementById('loginBtn');
+const loginError = document.getElementById('loginError');
+
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  clearValidation(loginForm);
+  loginError.style.display = 'none';
+
+  if (!validateForm(loginForm)) return;
+
+  const email    = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+
+  setBtnLoading(loginBtn, true, 'Signing in…');
+
+  const { session, error } = await signIn(email, password);
+
+  setBtnLoading(loginBtn, false);
+
+  if (error) {
+    loginError.textContent = error.message ?? 'Invalid credentials. Please try again.';
+    loginError.style.display = 'block';
+    return;
+  }
+
+  showToast('Welcome back! 👋', 'success', 1500);
+  setTimeout(() => window.location.href = 'dashboard.html', 700);
+});
+</script>
+</body>
+</html>

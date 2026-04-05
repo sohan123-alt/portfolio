@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit Profile · Admin</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="admin-body">
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-icon">⚡</div>
+    <div>
+      <div class="sidebar-brand-name">Portfolio</div>
+      <div class="sidebar-brand-sub">Admin Panel</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-section-label">Main</div>
+    <a href="dashboard.html" class="sidebar-link">
+      <span class="sidebar-link-icon">📊</span> Dashboard
+    </a>
+    <a href="add-project.html" class="sidebar-link">
+      <span class="sidebar-link-icon">➕</span> Add Project
+    </a>
+    <div class="sidebar-section-label">Settings</div>
+    <a href="profile.html" class="sidebar-link active">
+      <span class="sidebar-link-icon">👤</span> Edit Profile
+    </a>
+    <a href="messages.html" class="sidebar-link">
+      <span class="sidebar-link-icon">✉️</span> Messages
+    </a>
+    <div class="sidebar-section-label">Site</div>
+    <a href="index.html" target="_blank" class="sidebar-link">
+      <span class="sidebar-link-icon">🌐</span> View Site
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="sidebar-link btn-danger" id="logoutBtn" style="width:100%;border-radius:var(--radius-sm);">
+      <span class="sidebar-link-icon">🚪</span> Sign Out
+    </button>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="admin-main">
+  <header class="admin-topbar">
+    <button id="sidebarToggle" style="display:none;background:none;border:none;cursor:pointer;color:var(--text);font-size:1.2rem;margin-right:1rem;">☰</button>
+    <span class="admin-topbar-title">Edit Profile</span>
+    <div class="admin-user">
+      <div class="admin-user-avatar" id="userInitial">A</div>
+      <span id="userEmail"></span>
+    </div>
+  </header>
+
+  <div class="admin-content">
+    <div class="admin-form-wrap">
+      <div style="margin-bottom:1.5rem;font-size:0.85rem;color:var(--text-muted);">
+        <a href="dashboard.html" style="color:var(--accent);">Dashboard</a>
+        <span style="margin:0 0.4rem;">›</span> Edit Profile
+      </div>
+
+      <div class="page-card">
+        <div class="page-card-header">
+          <span class="page-card-title">Public Profile</span>
+          <span class="tag">Shown on homepage</span>
+        </div>
+        <div class="page-card-body">
+          <form id="profileForm" novalidate>
+            <input type="hidden" id="profileId" />
+
+            <!-- Live preview card -->
+            <div style="display:flex;align-items:center;gap:1.2rem;padding:1.2rem;background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.12);border-radius:var(--radius-sm);margin-bottom:1.8rem;">
+              <div id="previewAvatarWrap" style="width:64px;height:64px;border-radius:50%;overflow:hidden;background:var(--bg-card);border:2px solid rgba(0,229,255,0.25);display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0;">
+                🧑‍💻
+              </div>
+              <div>
+                <div style="font-family:var(--font-display);font-weight:700;font-size:1.05rem;" id="previewName">Your Name</div>
+                <div style="font-size:0.82rem;color:var(--text-muted);" id="previewBio">Your bio will appear here.</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="pName">Display Name <span style="color:var(--error)">*</span></label>
+              <input type="text" id="pName" class="form-control" placeholder="Jane Doe" required />
+              <span class="field-error">Name is required.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="pBio">Bio / Tagline <span style="color:var(--error)">*</span></label>
+              <textarea id="pBio" class="form-control" placeholder="A passionate developer who…" required style="min-height:100px;"></textarea>
+              <span class="field-error">Bio is required.</span>
+            </div>
+
+            <!-- Profile Image -->
+            <div class="form-group">
+              <label>Profile Photo</label>
+              <div class="file-drop" id="fileDrop">
+                <input type="file" id="imgFile" accept="image/*" />
+                <div>
+                  <div style="font-size:2rem;margin-bottom:0.4rem;">🖼️</div>
+                  <p style="font-weight:500;">Click or drag to upload photo</p>
+                  <p style="font-size:0.78rem;margin-top:0.2rem;">PNG, JPG · max 5 MB · Square recommended</p>
+                </div>
+              </div>
+
+              <div class="img-preview" id="imgPreview">
+                <img id="previewImg" src="" alt="Preview" style="max-height:160px;" />
+                <div style="padding:0.5rem 0.75rem;font-size:0.78rem;color:var(--text-muted);display:flex;justify-content:space-between;align-items:center;">
+                  <span id="previewFileName">photo.jpg</span>
+                  <button type="button" id="removeImg" style="background:none;border:none;cursor:pointer;color:var(--error);font-size:0.8rem;">Remove ✕</button>
+                </div>
+              </div>
+
+              <div id="existingImgWrap" style="display:none;margin-top:0.75rem;">
+                <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.4rem;">Current photo:</p>
+                <img id="existingImg" src="" alt="Current"
+                  style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--border);" />
+                <label style="display:flex;align-items:center;gap:0.5rem;margin-top:0.5rem;font-size:0.82rem;color:var(--text-muted);cursor:pointer;">
+                  <input type="checkbox" id="removeExistingImg" style="accent-color:var(--error);" />
+                  Remove current photo
+                </label>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:0.75rem;margin-top:1.5rem;">
+              <button type="submit" class="btn btn-primary" id="saveBtn">Save Profile</button>
+              <a href="dashboard.html" class="btn btn-ghost">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/supabase.js"></script>
+<script src="js/app.js"></script>
+<script>
+/* ── Auth guard ─────────────────────────────────────── */
+(async () => {
+  const session = await requireAuth();
+  document.getElementById('userEmail').textContent = session.user.email;
+  document.getElementById('userInitial').textContent = (session.user.email[0] ?? 'A').toUpperCase();
+})();
+
+document.getElementById('logoutBtn').addEventListener('click', () => signOut());
+
+const sidebarToggle = document.getElementById('sidebarToggle');
+if (window.innerWidth < 768) sidebarToggle.style.display = 'inline-block';
+sidebarToggle.addEventListener('click', () =>
+  document.getElementById('sidebar').classList.toggle('open')
+);
+
+/* ── Live preview ───────────────────────────────────── */
+document.getElementById('pName').addEventListener('input', e => {
+  document.getElementById('previewName').textContent = e.target.value || 'Your Name';
+});
+document.getElementById('pBio').addEventListener('input', e => {
+  document.getElementById('previewBio').textContent = e.target.value || 'Your bio will appear here.';
+});
+
+/* ── Image preview ──────────────────────────────────── */
+const imgFile     = document.getElementById('imgFile');
+const imgPreview  = document.getElementById('imgPreview');
+const previewImg  = document.getElementById('previewImg');
+
+wireImagePreview(imgFile, previewImg, imgPreview);
+
+// Also update the mini avatar in the preview card
+imgFile.addEventListener('change', () => {
+  const file = imgFile.files[0];
+  if (!file) return;
+  document.getElementById('previewFileName').textContent = file.name;
+  const url = URL.createObjectURL(file);
+  const avatarWrap = document.getElementById('previewAvatarWrap');
+  avatarWrap.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;" />`;
+});
+
+document.getElementById('removeImg').addEventListener('click', () => {
+  imgFile.value = '';
+  imgPreview.style.display = 'none';
+  previewImg.src = '';
+  document.getElementById('previewAvatarWrap').innerHTML = '🧑‍💻';
+});
+
+/* ── Load existing profile ──────────────────────────── */
+let existingImageUrl = null;
+
+async function loadProfile() {
+  showLoading('Loading profile…');
+  const { data } = await fetchProfile();
+  hideLoading();
+  if (!data) return;
+
+  document.getElementById('profileId').value = data.id;
+  document.getElementById('pName').value     = data.name   ?? '';
+  document.getElementById('pBio').value      = data.bio    ?? '';
+
+  document.getElementById('previewName').textContent = data.name  ?? 'Your Name';
+  document.getElementById('previewBio').textContent  = data.bio   ?? 'Your bio will appear here.';
+
+  if (data.image_url) {
+    existingImageUrl = data.image_url;
+    document.getElementById('existingImg').src = data.image_url;
+    document.getElementById('existingImgWrap').style.display = 'block';
+
+    const avatarWrap = document.getElementById('previewAvatarWrap');
+    avatarWrap.innerHTML = `<img src="${data.image_url}" style="width:100%;height:100%;object-fit:cover;" />`;
+  }
+}
+
+/* ── Form submit ────────────────────────────────────── */
+const profileForm = document.getElementById('profileForm');
+const saveBtn     = document.getElementById('saveBtn');
+
+profileForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  clearValidation(profileForm);
+  if (!validateForm(profileForm)) return;
+
+  setBtnLoading(saveBtn, true, 'Saving…');
+
+  const name   = document.getElementById('pName').value.trim();
+  const bio    = document.getElementById('pBio').value.trim();
+  const id     = document.getElementById('profileId').value || undefined;
+  const file   = imgFile.files[0];
+  const removeExisting = document.getElementById('removeExistingImg').checked;
+
+  let image_url = existingImageUrl;
+
+  if (removeExisting && existingImageUrl) {
+    const path = pathFromUrl(existingImageUrl);
+    if (path) await deleteImage(path);
+    image_url = null;
+  }
+
+  if (file) {
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('Image must be under 5 MB.', 'error');
+      setBtnLoading(saveBtn, false);
+      return;
+    }
+    if (existingImageUrl && !removeExisting) {
+      const oldPath = pathFromUrl(existingImageUrl);
+      if (oldPath) await deleteImage(oldPath);
+    }
+    const path = `profile/${uniqueFilename(file)}`;
+    const { url, error: upErr } = await uploadImage(file, path);
+    if (upErr) {
+      showToast('Upload failed: ' + upErr.message, 'error');
+      setBtnLoading(saveBtn, false);
+      return;
+    }
+    image_url = url;
+  }
+
+  const payload = { name, bio, image_url };
+  if (id) payload.id = id;
+
+  const { error } = await upsertProfile(payload);
+
+  setBtnLoading(saveBtn, false);
+
+  if (error) {
+    showToast('Error: ' + error.message, 'error');
+  } else {
+    showToast('Profile saved! ✅', 'success');
+  }
+});
+
+loadProfile();
+</script>
+</body>
+</html>
