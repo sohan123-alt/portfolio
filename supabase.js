@@ -8,7 +8,7 @@ const SUPABASE_URL = 'https://eivusobkrgnbasivoykt.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_nuaxj2YYkmaCsbKgk72KKA_Rq8H-awu';
 
 // Initialize the Supabase client (loaded via CDN in HTML)
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = window.supabase.createClient(eivusobkrgnbasivoykt.supabase.co, sb_publishable_nuaxj2YYkmaCsbKgk72KKA_Rq8H-awu);
 
 // ─── Table names ───────────────────────────────────────────────
 const TABLES = {
