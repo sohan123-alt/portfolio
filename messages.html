@@ -34,7 +34,7 @@
       <span class="sidebar-link-icon">✉️</span> Messages
     </a>
     <div class="sidebar-section-label">Site</div>
-    <a href="index.html" target="_blank" class="sidebar-link">
+    <a href="../index.html" target="_blank" class="sidebar-link">
       <span class="sidebar-link-icon">🌐</span> View Site
     </a>
   </nav>
@@ -111,17 +111,18 @@
   </div>
 </div>
 
-<script src="../js/supabase.js"></script>
-<script src="../js/app.js"></script>
+<script src="auth-guard.js"></script>
+<script src="supabase.js"></script>
+<script src="app.js"></script>
 <script>
 /* ── Auth guard ─────────────────────────────────────── */
-(async () => {
-  const session = await requireAuth();
-  document.getElementById('userEmail').textContent = session.user.email;
-  document.getElementById('userInitial').textContent = (session.user.email[0] ?? 'A').toUpperCase();
-})();
+const _session = adminGuard();
+if (_session) {
+  document.getElementById('userEmail').textContent = 'Admin';
+  document.getElementById('userInitial').textContent = 'A';
+}
 
-document.getElementById('logoutBtn').addEventListener('click', () => signOut());
+document.getElementById('logoutBtn').addEventListener('click', adminSignOut);
 
 const sidebarToggle = document.getElementById('sidebarToggle');
 if (window.innerWidth < 768) sidebarToggle.style.display = 'inline-block';
