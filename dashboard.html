@@ -37,7 +37,7 @@
     </a>
 
     <div class="sidebar-section-label">Site</div>
-    <a href="index.html" target="_blank" class="sidebar-link">
+    <a href="../index.html" target="_blank" class="sidebar-link">
       <span class="sidebar-link-icon">🌐</span> View Site
     </a>
   </nav>
@@ -57,7 +57,7 @@
     <span class="admin-topbar-title">Dashboard Overview</span>
     <div class="admin-user">
       <div class="admin-user-avatar" id="userInitial">A</div>
-      <span id="userEmail">admin@example.com</span>
+      <span id="userEmail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="c6a7a2abafa886a3bea7abb6aaa3e8a5a9ab">[email&#160;protected]</a></span>
     </div>
   </header>
 
@@ -129,21 +129,19 @@
   </div>
 </div>
 
-<script src="supabase.js"></script>
-<script src="app.js"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="../js/auth-guard.js"></script>
+<script src="../js/supabase.js"></script>
+<script src="../js/app.js"></script>
 <script>
 /* ── Auth guard ─────────────────────────────────────── */
-let currentUser;
-(async () => {
-  const session = await requireAuth();
-  currentUser = session.user;
-  document.getElementById('userEmail').textContent = currentUser.email;
-  document.getElementById('userInitial').textContent =
-    (currentUser.email[0] ?? 'A').toUpperCase();
-})();
+const _session = adminGuard();
+if (_session) {
+  document.getElementById('userEmail').textContent = 'Admin';
+  document.getElementById('userInitial').textContent = 'A';
+}
 
 /* ── Logout ─────────────────────────────────────────── */
-document.getElementById('logoutBtn').addEventListener('click', () => signOut());
+document.getElementById('logoutBtn').addEventListener('click', adminSignOut);
 
 /* ── Mobile sidebar toggle ──────────────────────────── */
 const sidebarToggle = document.getElementById('sidebarToggle');
@@ -241,12 +239,4 @@ document.getElementById('confirmDelete').addEventListener('click', async () => {
 
 function escHtml(str) {
   return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-/* ── Init ─────────────────────────────────────────── */
-loadStats();
-loadProjectsTable();
-</script>
-</body>
-</html>
+    .replace(/>/g,'&gt;').replace
