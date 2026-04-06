@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Login · Portfolio</title>
   <link rel="stylesheet" href="style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="login-page">
 
 <div class="login-bg"></div>
 
 <div class="login-card">
-  <!-- Logo / Brand -->
+
+  <!-- Logo -->
   <div class="login-logo">
     <div class="login-logo-icon">🔐</div>
     <h1>Admin Login</h1>
@@ -20,18 +20,20 @@
   </div>
 
   <!-- Login Form -->
-  <form id="loginForm" novalidate>
+  <form id="loginForm" novalidate autocomplete="off">
+
     <div class="form-group">
-      <label for="email">Email Address</label>
+      <label for="username">Username</label>
       <input
-        type="email"
-        id="email"
+        type="text"
+        id="username"
         class="form-control"
-        placeholder="admin@example.com"
+        placeholder="admin"
         required
-        autocomplete="email"
+        autocomplete="username"
+        spellcheck="false"
       />
-      <span class="field-error">Please enter a valid email.</span>
+      <span class="field-error">Username is required.</span>
     </div>
 
     <div class="form-group">
@@ -46,88 +48,306 @@
           autocomplete="current-password"
           style="padding-right:3rem;"
         />
-        <!-- Toggle password visibility -->
-        <button type="button" id="togglePwd"
-          style="position:absolute;right:0.8rem;top:50%;transform:translateY(-50%);
-                 background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1rem;">
-          👁
-        </button>
+        <button
+          type="button"
+          id="togglePwd"
+          aria-label="Toggle password visibility"
+          style="position:absolute;right:0.85rem;top:50%;transform:translateY(-50%);
+                 background:none;border:none;cursor:pointer;color:var(--text-muted);
+                 font-size:1rem;line-height:1;padding:2px;transition:color 0.2s;"
+        >👁</button>
       </div>
       <span class="field-error">Password is required.</span>
     </div>
 
     <!-- Error banner -->
     <div id="loginError"
-      style="display:none;background:rgba(255,83,112,0.1);border:1px solid rgba(255,83,112,0.25);
-             border-radius:var(--radius-sm);padding:0.7rem 1rem;font-size:0.88rem;color:var(--error);margin-bottom:1rem;">
+      style="display:none;background:rgba(255,83,112,0.1);
+             border:1px solid rgba(255,83,112,0.3);
+             border-radius:var(--radius-sm);padding:0.75rem 1rem;
+             font-size:0.88rem;color:var(--error);margin-bottom:1rem;
+             align-items:center;gap:0.5rem;">
+      <span>⚠️</span>
+      <span id="loginErrorText">Invalid credentials.</span>
     </div>
 
-    <button type="submit" class="btn btn-primary" id="loginBtn" style="width:100%;justify-content:center;border-radius:var(--radius-sm);">
-      Sign In
+    <!-- Lockout warning -->
+    <div id="lockoutBanner"
+      style="display:none;background:rgba(255,183,77,0.1);
+             border:1px solid rgba(255,183,77,0.3);
+             border-radius:var(--radius-sm);padding:0.75rem 1rem;
+             font-size:0.85rem;color:var(--warning);margin-bottom:1rem;">
+      🔒 Too many failed attempts. Try again in <strong id="lockoutTimer">30</strong>s.
+    </div>
+
+    <button
+      type="submit"
+      class="btn btn-primary"
+      id="loginBtn"
+      style="width:100%;justify-content:center;border-radius:var(--radius-sm);font-size:0.95rem;"
+    >
+      Sign In →
     </button>
+
+    <!-- Attempt indicator dots -->
+    <div class="attempt-dots" id="attemptDots"></div>
+
   </form>
 
   <div class="divider"></div>
 
   <p style="text-align:center;font-size:0.82rem;color:var(--text-muted);">
-    <a href="index.html" style="color:var(--accent);">← Back to Portfolio</a>
+    <a href="../index.html" style="color:var(--accent);">← Back to Portfolio</a>
   </p>
 
-  <!-- Setup hint -->
-  <div style="margin-top:1.5rem;padding:1rem;background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.12);border-radius:var(--radius-sm);">
-    <p style="font-size:0.78rem;color:var(--text-muted);line-height:1.6;">
-      <strong style="color:var(--accent);">Setup:</strong>
-      Create an admin user in your Supabase project under
-      Authentication → Users, then sign in here.
+  <!-- How-to hint -->
+  <div style="margin-top:1.4rem;padding:1rem;
+              background:rgba(0,229,255,0.04);
+              border:1px solid rgba(0,229,255,0.12);
+              border-radius:var(--radius-sm);">
+    <p style="font-size:0.78rem;color:var(--text-muted);line-height:1.8;margin:0;">
+      <strong style="color:var(--accent);">⚙️ Change credentials</strong><br/>
+      Open <code style="background:rgba(255,255,255,0.07);padding:1px 6px;border-radius:3px;">admin/login.html</code>
+      and edit <code style="background:rgba(255,255,255,0.07);padding:1px 6px;border-radius:3px;">ADMIN_USERNAME</code>
+      &amp; <code style="background:rgba(255,255,255,0.07);padding:1px 6px;border-radius:3px;">ADMIN_PASSWORD</code>
+      at the top of the <code style="background:rgba(255,255,255,0.07);padding:1px 6px;border-radius:3px;">&lt;script&gt;</code> block.
     </p>
   </div>
+
 </div>
 
-<script src="supabase.js"></script>
+<!-- ── Extra styles ──────────────────────────────────────────── -->
+<style>
+  @keyframes shake {
+    0%,100% { transform:translateX(0); }
+    15%     { transform:translateX(-8px); }
+    30%     { transform:translateX(8px); }
+    45%     { transform:translateX(-5px); }
+    60%     { transform:translateX(5px); }
+    75%     { transform:translateX(-3px); }
+    90%     { transform:translateX(3px); }
+  }
+  .shake { animation: shake 0.45s ease both; }
+  #loginBtn:disabled { opacity:0.55; cursor:not-allowed; transform:none !important; }
+  .attempt-dots {
+    display:flex; gap:6px; justify-content:center; margin-top:1rem; min-height:12px;
+  }
+  .attempt-dot {
+    width:9px; height:9px; border-radius:50%;
+    border:1.5px solid var(--border-h);
+    transition:background 0.3s, border-color 0.3s;
+  }
+  .attempt-dot.used { background:var(--error); border-color:var(--error); }
+</style>
+
+<!-- ── No external dependencies — pure JS ────────────────────── -->
 <script src="app.js"></script>
 <script>
-/* ── Redirect if already logged in ─────────────────── */
-(async () => {
-  const session = await getSession();
-  if (session) window.location.href = 'dashboard.html';
-})();
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  🔑  SET YOUR CREDENTIALS HERE                              ║
+// ╚══════════════════════════════════════════════════════════════╝
+const ADMIN_USERNAME = 'admin';      // ← change this
+const ADMIN_PASSWORD = 'password123'; // ← change this
 
-/* ── Toggle password visibility ─────────────────────── */
-document.getElementById('togglePwd').addEventListener('click', () => {
-  const pwd = document.getElementById('password');
-  pwd.type = pwd.type === 'password' ? 'text' : 'password';
+
+// ── Security config ───────────────────────────────────────────
+const MAX_ATTEMPTS    = 5;   // max wrong tries before lockout
+const LOCKOUT_SECONDS = 30;  // seconds to wait after lockout
+const SESSION_KEY     = 'portfolio_admin_session';
+const LOCKOUT_KEY     = 'portfolio_admin_lockout';
+const ATTEMPTS_KEY    = 'portfolio_admin_attempts';
+
+// ── DOM refs ──────────────────────────────────────────────────
+const loginForm      = document.getElementById('loginForm');
+const loginBtn       = document.getElementById('loginBtn');
+const loginError     = document.getElementById('loginError');
+const loginErrorText = document.getElementById('loginErrorText');
+const lockoutBanner  = document.getElementById('lockoutBanner');
+const lockoutTimer   = document.getElementById('lockoutTimer');
+const usernameInput  = document.getElementById('username');
+const passwordInput  = document.getElementById('password');
+const dotsWrap       = document.getElementById('attemptDots');
+
+// ── If session already valid, skip login ──────────────────────
+if (sessionStorage.getItem(SESSION_KEY) === 'true') {
+  window.location.replace('dashboard.html');
+}
+
+// ── Build attempt-tracker dots ────────────────────────────────
+for (let i = 0; i < MAX_ATTEMPTS; i++) {
+  const dot = document.createElement('div');
+  dot.className = 'attempt-dot';
+  dot.id = `dot-${i}`;
+  dotsWrap.appendChild(dot);
+}
+
+function updateDots(usedCount) {
+  for (let i = 0; i < MAX_ATTEMPTS; i++) {
+    document.getElementById(`dot-${i}`)
+      .classList.toggle('used', i < usedCount);
+  }
+}
+
+// ── Lockout helpers ───────────────────────────────────────────
+let lockTimer = null;
+
+function checkLockout() {
+  const until = parseInt(localStorage.getItem(LOCKOUT_KEY) || '0', 10);
+  if (until > Date.now()) {
+    startLockoutCountdown(Math.ceil((until - Date.now()) / 1000));
+    return true;
+  }
+  return false;
+}
+
+function startLockoutCountdown(seconds) {
+  setInputsDisabled(true);
+  lockoutBanner.style.display = 'block';
+  hideError();
+
+  let remaining = seconds;
+  lockoutTimer.textContent = remaining;
+
+  clearInterval(lockTimer);
+  lockTimer = setInterval(() => {
+    remaining--;
+    lockoutTimer.textContent = remaining;
+    if (remaining <= 0) {
+      clearInterval(lockTimer);
+      // Reset after lockout expires
+      localStorage.removeItem(LOCKOUT_KEY);
+      localStorage.removeItem(ATTEMPTS_KEY);
+      setInputsDisabled(false);
+      lockoutBanner.style.display = 'none';
+      updateDots(0);
+      usernameInput.focus();
+    }
+  }, 1000);
+}
+
+function setInputsDisabled(state) {
+  loginBtn.disabled       = state;
+  usernameInput.disabled  = state;
+  passwordInput.disabled  = state;
+}
+
+function getAttempts() {
+  return parseInt(localStorage.getItem(ATTEMPTS_KEY) || '0', 10);
+}
+
+// ── Error display ─────────────────────────────────────────────
+function showError(msg) {
+  loginErrorText.textContent = msg;
+  loginError.style.display   = 'flex';
+  // Shake the whole card
+  const card = document.querySelector('.login-card');
+  card.classList.remove('shake');
+  void card.offsetWidth; // force reflow to restart animation
+  card.classList.add('shake');
+  card.addEventListener('animationend', () => card.classList.remove('shake'), { once: true });
+}
+
+function hideError() {
+  loginError.style.display = 'none';
+}
+
+// ── Clear error styling when user types ──────────────────────
+[usernameInput, passwordInput].forEach(el => {
+  el.addEventListener('input', () => {
+    el.classList.remove('input-error');
+    hideError();
+  });
 });
 
-/* ── Login form submit ──────────────────────────────── */
-const loginForm  = document.getElementById('loginForm');
-const loginBtn   = document.getElementById('loginBtn');
-const loginError = document.getElementById('loginError');
+// ── Toggle password visibility ────────────────────────────────
+document.getElementById('togglePwd').addEventListener('click', function () {
+  const isHidden = passwordInput.type === 'password';
+  passwordInput.type  = isHidden ? 'text' : 'password';
+  this.textContent    = isHidden ? '🙈' : '👁';
+  passwordInput.focus();
+});
 
-loginForm.addEventListener('submit', async (e) => {
+// ── Form submit ───────────────────────────────────────────────
+loginForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  clearValidation(loginForm);
-  loginError.style.display = 'none';
+  hideError();
 
-  if (!validateForm(loginForm)) return;
+  // Blocked during lockout?
+  if (checkLockout()) return;
 
-  const email    = document.getElementById('email').value.trim();
-  const password = document.getElementById('password').value;
+  const username = usernameInput.value.trim();
+  const password = passwordInput.value;
 
-  setBtnLoading(loginBtn, true, 'Signing in…');
-
-  const { session, error } = await signIn(email, password);
-
-  setBtnLoading(loginBtn, false);
-
-  if (error) {
-    loginError.textContent = error.message ?? 'Invalid credentials. Please try again.';
-    loginError.style.display = 'block';
+  // Empty-field checks
+  if (!username) {
+    usernameInput.classList.add('input-error');
+    showError('Username is required.');
+    usernameInput.focus();
+    return;
+  }
+  if (!password) {
+    passwordInput.classList.add('input-error');
+    showError('Password is required.');
+    passwordInput.focus();
     return;
   }
 
-  showToast('Welcome back! 👋', 'success', 1500);
-  setTimeout(() => window.location.href = 'dashboard.html', 700);
+  // Show brief loading state
+  setBtnLoading(loginBtn, true, 'Verifying…');
+
+  // Small artificial delay (feels more "real" and prevents timing attacks)
+  setTimeout(() => {
+    setBtnLoading(loginBtn, false);
+
+    const okUser = username === ADMIN_USERNAME;
+    const okPass = password === ADMIN_PASSWORD;
+
+    if (okUser && okPass) {
+      // ✅ SUCCESS
+      localStorage.removeItem(ATTEMPTS_KEY);
+      localStorage.removeItem(LOCKOUT_KEY);
+      sessionStorage.setItem(SESSION_KEY, 'true');
+
+      // Visual success feedback before redirect
+      loginBtn.innerHTML    = '✓ &nbsp;Access Granted';
+      loginBtn.style.background = 'var(--success)';
+      loginBtn.style.color      = '#fff';
+      showToast('Welcome back, Admin! 👋', 'success', 2000);
+
+      setTimeout(() => window.location.replace('dashboard.html'), 900);
+
+    } else {
+      // ❌ FAILURE
+      let attempts = getAttempts() + 1;
+      localStorage.setItem(ATTEMPTS_KEY, String(attempts));
+      updateDots(attempts);
+
+      const left = MAX_ATTEMPTS - attempts;
+
+      if (attempts >= MAX_ATTEMPTS) {
+        const lockUntil = Date.now() + LOCKOUT_SECONDS * 1000;
+        localStorage.setItem(LOCKOUT_KEY, String(lockUntil));
+        startLockoutCountdown(LOCKOUT_SECONDS);
+        showToast('Account locked for ' + LOCKOUT_SECONDS + 's.', 'error');
+      } else if (!okUser) {
+        usernameInput.classList.add('input-error');
+        showError('Unknown username. ' + left + ' attempt' + (left !== 1 ? 's' : '') + ' left.');
+        usernameInput.select();
+      } else {
+        // Username right, password wrong
+        passwordInput.classList.add('input-error');
+        showError('Incorrect password. ' + left + ' attempt' + (left !== 1 ? 's' : '') + ' left.');
+        passwordInput.value = '';
+        passwordInput.focus();
+      }
+    }
+  }, 250); // 250ms delay
 });
+
+// ── Init on page load ─────────────────────────────────────────
+checkLockout();
+updateDots(getAttempts());
+usernameInput.focus();
 </script>
 </body>
 </html>
