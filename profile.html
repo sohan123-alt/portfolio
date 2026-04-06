@@ -6,10 +6,211 @@
   <title>Edit Profile · Admin</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* ── Page-specific styles ────────────────────────── */
+
+    /* Tab system */
+    .tabs {
+      display: flex;
+      gap: 0.25rem;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+      margin-bottom: 2rem;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 0.55rem 1rem;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+    }
+    .tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+    .tab-btn.active {
+      background: rgba(0,229,255,0.1);
+      color: var(--accent);
+      border: 1px solid rgba(0,229,255,0.2);
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Live preview card */
+    .profile-preview {
+      background: linear-gradient(135deg, rgba(0,229,255,0.04), rgba(123,97,255,0.04));
+      border: 1px solid rgba(0,229,255,0.15);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .profile-preview::before {
+      content: 'LIVE PREVIEW';
+      position: absolute;
+      top: 0.6rem; right: 0.8rem;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      opacity: 0.6;
+    }
+    .preview-inner {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+    .preview-avatar {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      border: 2.5px solid rgba(0,229,255,0.35);
+      background: var(--bg-card);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem;
+      overflow: hidden;
+      flex-shrink: 0;
+      box-shadow: 0 0 20px rgba(0,229,255,0.1);
+      transition: box-shadow 0.3s;
+    }
+    .preview-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .preview-name {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 800;
+      margin-bottom: 0.2rem;
+    }
+    .preview-bio {
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      max-width: 360px;
+    }
+    .preview-links {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .preview-link-chip {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      font-size: 0.72rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 99px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    /* Photo upload area */
+    .photo-upload-area {
+      display: flex;
+      gap: 1.5rem;
+      align-items: flex-start;
+    }
+    .photo-current {
+      flex-shrink: 0;
+    }
+    .photo-current-img {
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--border);
+      background: var(--bg-card);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.5rem;
+      overflow: hidden;
+    }
+    .photo-current-img img { width: 100%; height: 100%; object-fit: cover; }
+    .photo-current-label {
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      margin-top: 0.4rem;
+    }
+    .photo-upload-right { flex: 1; }
+
+    /* Character counter */
+    .char-counter {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-align: right;
+      margin-top: 0.3rem;
+      transition: color 0.2s;
+    }
+    .char-counter.warn  { color: var(--warning); }
+    .char-counter.limit { color: var(--error); }
+
+    /* Section divider */
+    .form-section-title {
+      font-family: var(--font-display);
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      margin: 1.8rem 0 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .form-section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Social link row */
+    .social-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.75rem;
+    }
+    .social-icon {
+      width: 36px; height: 36px;
+      border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .social-row .form-control { margin: 0; }
+
+    /* Success animation on save */
+    @keyframes saveFlash {
+      0%   { box-shadow: 0 0 0 rgba(0,200,150,0); }
+      40%  { box-shadow: 0 0 32px rgba(0,200,150,0.25); }
+      100% { box-shadow: 0 0 0 rgba(0,200,150,0); }
+    }
+    .save-flash { animation: saveFlash 1s ease; }
+
+    /* Change indicator dot */
+    .unsaved-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--warning);
+      display: inline-block;
+      margin-left: 0.4rem;
+      animation: glowPulse 1.5s infinite;
+      vertical-align: middle;
+    }
+  </style>
 </head>
 <body class="admin-body">
 
-<!-- Sidebar -->
+<!-- ─── Sidebar ──────────────────────────────────────────── -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-brand">
     <div class="sidebar-brand-icon">⚡</div>
@@ -34,187 +235,606 @@
       <span class="sidebar-link-icon">✉️</span> Messages
     </a>
     <div class="sidebar-section-label">Site</div>
-    <a href="../index.html" target="_blank" class="sidebar-link">
+    <a href="index.html" target="_blank" class="sidebar-link">
       <span class="sidebar-link-icon">🌐</span> View Site
     </a>
   </nav>
   <div class="sidebar-footer">
-    <button class="sidebar-link btn-danger" id="logoutBtn" style="width:100%;border-radius:var(--radius-sm);">
+    <button class="sidebar-link btn-danger" id="logoutBtn"
+      style="width:100%;border-radius:var(--radius-sm);">
       <span class="sidebar-link-icon">🚪</span> Sign Out
     </button>
   </div>
 </aside>
 
-<!-- Main -->
+<!-- ─── Main ─────────────────────────────────────────────── -->
 <div class="admin-main">
+
+  <!-- Topbar -->
   <header class="admin-topbar">
-    <button id="sidebarToggle" style="display:none;background:none;border:none;cursor:pointer;color:var(--text);font-size:1.2rem;margin-right:1rem;">☰</button>
-    <span class="admin-topbar-title">Edit Profile</span>
+    <button id="sidebarToggle"
+      style="display:none;background:none;border:none;cursor:pointer;color:var(--text);font-size:1.2rem;margin-right:1rem;">☰</button>
+    <div style="display:flex;align-items:center;gap:0.75rem;">
+      <span class="admin-topbar-title">Edit Profile</span>
+      <span id="unsavedBadge" style="display:none;">
+        <span class="unsaved-dot"></span>
+        <span style="font-size:0.75rem;color:var(--warning);">Unsaved</span>
+      </span>
+    </div>
     <div class="admin-user">
       <div class="admin-user-avatar" id="userInitial">A</div>
-      <span id="userEmail"></span>
+      <span id="userEmail">Admin</span>
     </div>
   </header>
 
   <div class="admin-content">
-    <div class="admin-form-wrap">
-      <div style="margin-bottom:1.5rem;font-size:0.85rem;color:var(--text-muted);">
-        <a href="dashboard.html" style="color:var(--accent);">Dashboard</a>
-        <span style="margin:0 0.4rem;">›</span> Edit Profile
-      </div>
 
-      <div class="page-card">
-        <div class="page-card-header">
-          <span class="page-card-title">Public Profile</span>
-          <span class="tag">Shown on homepage</span>
+    <!-- Breadcrumb -->
+    <div style="margin-bottom:1.5rem;font-size:0.84rem;color:var(--text-muted);">
+      <a href="dashboard.html" style="color:var(--accent);">Dashboard</a>
+      <span style="margin:0 0.4rem;opacity:0.4;">›</span>
+      <span>Edit Profile</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 340px;gap:1.5rem;align-items:start;">
+
+      <!-- ── Left: Form ─────────────────────────────────── -->
+      <div>
+
+        <!-- Tab bar -->
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="basic">
+            <span>👤</span> Basic Info
+          </button>
+          <button class="tab-btn" data-tab="photo">
+            <span>🖼️</span> Photo
+          </button>
+          <button class="tab-btn" data-tab="social">
+            <span>🔗</span> Social Links
+          </button>
         </div>
-        <div class="page-card-body">
-          <form id="profileForm" novalidate>
-            <input type="hidden" id="profileId" />
 
-            <!-- Live preview card -->
-            <div style="display:flex;align-items:center;gap:1.2rem;padding:1.2rem;background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.12);border-radius:var(--radius-sm);margin-bottom:1.8rem;">
-              <div id="previewAvatarWrap" style="width:64px;height:64px;border-radius:50%;overflow:hidden;background:var(--bg-card);border:2px solid rgba(0,229,255,0.25);display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0;">
-                🧑‍💻
-              </div>
-              <div>
-                <div style="font-family:var(--font-display);font-weight:700;font-size:1.05rem;" id="previewName">Your Name</div>
-                <div style="font-size:0.82rem;color:var(--text-muted);" id="previewBio">Your bio will appear here.</div>
-              </div>
-            </div>
+        <form id="profileForm" novalidate>
+          <input type="hidden" id="profileId" />
+
+          <!-- ══ TAB: Basic Info ════════════════════════ -->
+          <div class="tab-panel active" id="tab-basic">
 
             <div class="form-group">
-              <label for="pName">Display Name <span style="color:var(--error)">*</span></label>
-              <input type="text" id="pName" class="form-control" placeholder="Jane Doe" required />
+              <label for="pName">
+                Display Name
+                <span style="color:var(--error);">*</span>
+              </label>
+              <input
+                type="text"
+                id="pName"
+                class="form-control"
+                placeholder="e.g. Jane Doe"
+                required
+                maxlength="60"
+              />
+              <div class="char-counter" id="nameCounter">0 / 60</div>
               <span class="field-error">Name is required.</span>
             </div>
 
             <div class="form-group">
-              <label for="pBio">Bio / Tagline <span style="color:var(--error)">*</span></label>
-              <textarea id="pBio" class="form-control" placeholder="A passionate developer who…" required style="min-height:100px;"></textarea>
+              <label for="pTitle">Job Title / Role</label>
+              <input
+                type="text"
+                id="pTitle"
+                class="form-control"
+                placeholder="e.g. Full-Stack Developer"
+                maxlength="80"
+              />
+              <div class="char-counter" id="titleCounter">0 / 80</div>
+            </div>
+
+            <div class="form-group">
+              <label for="pBio">
+                Short Bio
+                <span style="color:var(--error);">*</span>
+              </label>
+              <textarea
+                id="pBio"
+                class="form-control"
+                placeholder="A passionate developer who loves building beautiful, performant web experiences…"
+                required
+                maxlength="220"
+                style="min-height:90px;resize:vertical;"
+              ></textarea>
+              <div class="char-counter" id="bioCounter">0 / 220</div>
               <span class="field-error">Bio is required.</span>
             </div>
 
-            <!-- Profile Image -->
             <div class="form-group">
-              <label>Profile Photo</label>
-              <div class="file-drop" id="fileDrop">
-                <input type="file" id="imgFile" accept="image/*" />
-                <div>
-                  <div style="font-size:2rem;margin-bottom:0.4rem;">🖼️</div>
-                  <p style="font-weight:500;">Click or drag to upload photo</p>
-                  <p style="font-size:0.78rem;margin-top:0.2rem;">PNG, JPG · max 5 MB · Square recommended</p>
-                </div>
-              </div>
+              <label for="pLongBio">Full About-Me Text</label>
+              <textarea
+                id="pLongBio"
+                class="form-control"
+                placeholder="Write a longer description that appears in the About section…"
+                maxlength="600"
+                style="min-height:120px;resize:vertical;"
+              ></textarea>
+              <div class="char-counter" id="longBioCounter">0 / 600</div>
+            </div>
 
-              <div class="img-preview" id="imgPreview">
-                <img id="previewImg" src="" alt="Preview" style="max-height:160px;" />
-                <div style="padding:0.5rem 0.75rem;font-size:0.78rem;color:var(--text-muted);display:flex;justify-content:space-between;align-items:center;">
-                  <span id="previewFileName">photo.jpg</span>
-                  <button type="button" id="removeImg" style="background:none;border:none;cursor:pointer;color:var(--error);font-size:0.8rem;">Remove ✕</button>
-                </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+              <div class="form-group">
+                <label for="pLocation">Location</label>
+                <input type="text" id="pLocation" class="form-control" placeholder="e.g. Dhaka, Bangladesh" maxlength="60" />
               </div>
-
-              <div id="existingImgWrap" style="display:none;margin-top:0.75rem;">
-                <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.4rem;">Current photo:</p>
-                <img id="existingImg" src="" alt="Current"
-                  style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--border);" />
-                <label style="display:flex;align-items:center;gap:0.5rem;margin-top:0.5rem;font-size:0.82rem;color:var(--text-muted);cursor:pointer;">
-                  <input type="checkbox" id="removeExistingImg" style="accent-color:var(--error);" />
-                  Remove current photo
-                </label>
+              <div class="form-group">
+                <label for="pEmail">Contact Email</label>
+                <input type="email" id="pEmail" class="form-control" placeholder="hello@yoursite.com" />
               </div>
             </div>
 
-            <div style="display:flex;gap:0.75rem;margin-top:1.5rem;">
-              <button type="submit" class="btn btn-primary" id="saveBtn">Save Profile</button>
-              <a href="dashboard.html" class="btn btn-ghost">Cancel</a>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+              <div class="form-group">
+                <label for="pYearsExp">Years of Experience</label>
+                <input type="number" id="pYearsExp" class="form-control" placeholder="3" min="0" max="50" />
+              </div>
+              <div class="form-group">
+                <label for="pAvailability">Availability Status</label>
+                <select id="pAvailability" class="form-control" style="cursor:pointer;">
+                  <option value="available">🟢 Available for work</option>
+                  <option value="busy">🟡 Currently busy</option>
+                  <option value="unavailable">🔴 Not available</option>
+                </select>
+              </div>
             </div>
-          </form>
+
+          </div><!-- /tab-basic -->
+
+          <!-- ══ TAB: Photo ══════════════════════════════ -->
+          <div class="tab-panel" id="tab-photo">
+
+            <div class="photo-upload-area">
+              <!-- Current photo preview -->
+              <div class="photo-current">
+                <div class="photo-current-img" id="currentPhotoDisplay">
+                  🧑‍💻
+                </div>
+                <div class="photo-current-label">Current</div>
+              </div>
+
+              <!-- Upload controls -->
+              <div class="photo-upload-right">
+                <div class="file-drop" id="fileDrop" style="margin-bottom:0.75rem;">
+                  <input type="file" id="imgFile" accept="image/png,image/jpeg,image/webp,image/gif" />
+                  <div class="file-drop-content">
+                    <div style="font-size:1.8rem;margin-bottom:0.4rem;">📤</div>
+                    <p style="font-weight:500;font-size:0.9rem;">Click or drag &amp; drop</p>
+                    <p style="font-size:0.75rem;color:var(--text-dim);margin-top:0.2rem;">PNG · JPG · WebP · max 5 MB · Square best</p>
+                  </div>
+                </div>
+
+                <!-- New image preview strip -->
+                <div class="img-preview" id="imgPreview">
+                  <img id="previewImg" src="" alt="Preview" style="max-height:140px;" />
+                  <div style="padding:0.5rem 0.75rem;font-size:0.78rem;color:var(--text-muted);
+                               display:flex;justify-content:space-between;align-items:center;">
+                    <span id="previewFileName">—</span>
+                    <button type="button" id="removeImg"
+                      style="background:none;border:none;cursor:pointer;color:var(--error);font-size:0.8rem;">
+                      Remove ✕
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Remove existing toggle -->
+            <div id="existingImgWrap" style="display:none;margin-top:1rem;
+              padding:0.85rem 1rem;background:rgba(255,83,112,0.06);
+              border:1px solid rgba(255,83,112,0.2);border-radius:var(--radius-sm);">
+              <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;font-size:0.88rem;">
+                <input type="checkbox" id="removeExistingImg" style="accent-color:var(--error);width:15px;height:15px;" />
+                <span>Remove current photo (will show initials instead)</span>
+              </label>
+            </div>
+
+            <div style="margin-top:1.2rem;padding:0.9rem;background:rgba(255,255,255,0.03);
+              border-radius:var(--radius-sm);border:1px solid var(--border);">
+              <p style="font-size:0.8rem;color:var(--text-muted);line-height:1.7;">
+                💡 <strong style="color:var(--text);">Tips:</strong>
+                Use a square image (1:1 ratio) for best results.
+                Minimum 300×300 px recommended.
+                Your photo appears on the homepage hero and about section.
+              </p>
+            </div>
+          </div><!-- /tab-photo -->
+
+          <!-- ══ TAB: Social Links ════════════════════════ -->
+          <div class="tab-panel" id="tab-social">
+
+            <p style="font-size:0.88rem;color:var(--text-muted);margin-bottom:1.5rem;">
+              Add your social links — they'll appear as chips on the portfolio homepage.
+            </p>
+
+            <div class="social-row">
+              <div class="social-icon">🐙</div>
+              <input type="url" id="pGithub" class="form-control"
+                placeholder="https://github.com/yourusername" />
+            </div>
+            <div class="social-row">
+              <div class="social-icon">💼</div>
+              <input type="url" id="pLinkedin" class="form-control"
+                placeholder="https://linkedin.com/in/yourprofile" />
+            </div>
+            <div class="social-row">
+              <div class="social-icon">🐦</div>
+              <input type="url" id="pTwitter" class="form-control"
+                placeholder="https://twitter.com/yourhandle" />
+            </div>
+            <div class="social-row">
+              <div class="social-icon">🌐</div>
+              <input type="url" id="pWebsite" class="form-control"
+                placeholder="https://yourwebsite.com" />
+            </div>
+            <div class="social-row">
+              <div class="social-icon">📧</div>
+              <input type="email" id="pEmailSocial" class="form-control"
+                placeholder="mailto:you@example.com" />
+            </div>
+
+          </div><!-- /tab-social -->
+
+          <!-- ── Action bar (always visible) ───────────── -->
+          <div style="display:flex;gap:0.75rem;margin-top:2rem;padding-top:1.5rem;
+                       border-top:1px solid var(--border);align-items:center;">
+            <button type="submit" class="btn btn-primary" id="saveBtn">
+              💾 Save Profile
+            </button>
+            <button type="button" class="btn btn-ghost" id="resetBtn">
+              Reset Changes
+            </button>
+            <a href="../index.html" target="_blank"
+              style="margin-left:auto;font-size:0.82rem;color:var(--accent);display:flex;align-items:center;gap:0.3rem;">
+              View Live Site ↗
+            </a>
+          </div>
+
+        </form>
+      </div><!-- /left col -->
+
+      <!-- ── Right: Live Preview card ──────────────────── -->
+      <div style="position:sticky;top:80px;">
+        <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
+                     color:var(--text-dim);margin-bottom:0.75rem;">Live Preview</div>
+
+        <div class="profile-preview" id="previewCard">
+          <div class="preview-inner">
+            <div class="preview-avatar" id="previewAvatar">🧑‍💻</div>
+            <div>
+              <div class="preview-name" id="previewName">Your Name</div>
+              <div style="font-size:0.78rem;color:var(--accent);margin-bottom:0.3rem;" id="previewTitle">Full-Stack Developer</div>
+              <div class="preview-bio" id="previewBio">Your short bio will appear here.</div>
+            </div>
+          </div>
+
+          <!-- Availability badge -->
+          <div style="margin-top:1rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+            <span id="previewAvailBadge"
+              style="font-size:0.72rem;padding:0.2rem 0.7rem;border-radius:99px;
+                     background:rgba(0,200,150,0.12);border:1px solid rgba(0,200,150,0.25);
+                     color:var(--success);">
+              🟢 Available for work
+            </span>
+            <span id="previewLocation" style="font-size:0.78rem;color:var(--text-muted);"></span>
+          </div>
+
+          <!-- Social link chips -->
+          <div class="preview-links" id="previewLinks" style="margin-top:0.75rem;"></div>
         </div>
-      </div>
-    </div>
-  </div>
-</div>
+
+        <!-- Mini stats card -->
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);
+                     padding:1.2rem;margin-top:1rem;">
+          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;
+                       color:var(--text-dim);margin-bottom:0.8rem;">Profile completeness</div>
+          <div style="background:rgba(255,255,255,0.05);border-radius:99px;height:6px;overflow:hidden;margin-bottom:0.5rem;">
+            <div id="completenessBar"
+              style="height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));
+                     border-radius:99px;width:0%;transition:width 0.5s var(--ease);"></div>
+          </div>
+          <div style="font-size:0.82rem;color:var(--text-muted);">
+            <span id="completenessPct" style="font-weight:700;color:var(--text);">0%</span>
+            complete
+          </div>
+          <div id="completenessHints" style="margin-top:0.6rem;font-size:0.75rem;color:var(--text-dim);line-height:1.8;"></div>
+        </div>
+
+      </div><!-- /right col -->
+
+    </div><!-- /grid -->
+  </div><!-- /admin-content -->
+</div><!-- /admin-main -->
 
 <script src="auth-guard.js"></script>
 <script src="supabase.js"></script>
 <script src="app.js"></script>
 <script>
-/* ── Auth guard ─────────────────────────────────────── */
+// ── Auth ──────────────────────────────────────────────────────
 const _session = adminGuard();
 if (_session) {
   document.getElementById('userEmail').textContent = 'Admin';
   document.getElementById('userInitial').textContent = 'A';
 }
-
 document.getElementById('logoutBtn').addEventListener('click', adminSignOut);
 
+// Mobile sidebar
 const sidebarToggle = document.getElementById('sidebarToggle');
 if (window.innerWidth < 768) sidebarToggle.style.display = 'inline-block';
 sidebarToggle.addEventListener('click', () =>
   document.getElementById('sidebar').classList.toggle('open')
 );
 
-/* ── Live preview ───────────────────────────────────── */
-document.getElementById('pName').addEventListener('input', e => {
-  document.getElementById('previewName').textContent = e.target.value || 'Your Name';
-});
-document.getElementById('pBio').addEventListener('input', e => {
-  document.getElementById('previewBio').textContent = e.target.value || 'Your bio will appear here.';
+// ── Tab switching ─────────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + target).classList.add('active');
+  });
 });
 
-/* ── Image preview ──────────────────────────────────── */
-const imgFile     = document.getElementById('imgFile');
-const imgPreview  = document.getElementById('imgPreview');
-const previewImg  = document.getElementById('previewImg');
+// ── Char counters ─────────────────────────────────────────────
+function wireCounter(inputId, counterId, max, warnAt) {
+  const input   = document.getElementById(inputId);
+  const counter = document.getElementById(counterId);
+  function update() {
+    const len = input.value.length;
+    counter.textContent = `${len} / ${max}`;
+    counter.classList.toggle('warn',  len >= (warnAt ?? max * 0.8) && len < max);
+    counter.classList.toggle('limit', len >= max);
+  }
+  input.addEventListener('input', update);
+  update();
+}
+wireCounter('pName',    'nameCounter',    60,  48);
+wireCounter('pTitle',   'titleCounter',   80,  64);
+wireCounter('pBio',     'bioCounter',     220, 180);
+wireCounter('pLongBio', 'longBioCounter', 600, 500);
+
+// ── Profile completeness ──────────────────────────────────────
+const COMPLETENESS_FIELDS = [
+  { id: 'pName',         label: 'Display name',      weight: 20 },
+  { id: 'pTitle',        label: 'Job title',          weight: 10 },
+  { id: 'pBio',          label: 'Short bio',          weight: 20 },
+  { id: 'pLongBio',      label: 'Full about-me text', weight: 10 },
+  { id: 'pLocation',     label: 'Location',           weight: 5  },
+  { id: 'pEmail',        label: 'Contact email',      weight: 5  },
+  { id: 'imgFile',       label: 'Profile photo',      weight: 15 },
+  { id: 'pGithub',       label: 'GitHub link',        weight: 5  },
+  { id: 'pLinkedin',     label: 'LinkedIn link',      weight: 5  },
+  { id: 'pYearsExp',     label: 'Years of experience',weight: 5  },
+];
+
+function updateCompleteness() {
+  let pct = 0;
+  const missing = [];
+  COMPLETENESS_FIELDS.forEach(f => {
+    const el = document.getElementById(f.id);
+    const hasValue = f.id === 'imgFile'
+      ? (el.files?.length > 0 || !!existingImageUrl)
+      : !!el?.value?.trim();
+    if (hasValue) pct += f.weight;
+    else missing.push(f.label);
+  });
+  pct = Math.min(pct, 100);
+  document.getElementById('completenessBar').style.width  = pct + '%';
+  document.getElementById('completenessPct').textContent  = pct + '%';
+  const hints = document.getElementById('completenessHints');
+  hints.innerHTML = missing.slice(0, 3).map(m =>
+    `<div style="display:flex;align-items:center;gap:0.35rem;">
+       <span style="color:var(--text-dim);">○</span> ${m}
+     </div>`
+  ).join('') + (missing.length > 3
+    ? `<div style="color:var(--text-dim);margin-top:0.2rem;">+ ${missing.length - 3} more</div>` : '');
+}
+
+// ── Live preview updaters ─────────────────────────────────────
+const previewName  = document.getElementById('previewName');
+const previewBio   = document.getElementById('previewBio');
+const previewTitle = document.getElementById('previewTitle');
+const previewAvatar = document.getElementById('previewAvatar');
+const previewLinks  = document.getElementById('previewLinks');
+
+let hasUnsavedChanges = false;
+function markUnsaved() {
+  hasUnsavedChanges = true;
+  document.getElementById('unsavedBadge').style.display = 'flex';
+  document.getElementById('unsavedBadge').style.alignItems = 'center';
+  document.getElementById('unsavedBadge').style.gap = '0.35rem';
+}
+function clearUnsaved() {
+  hasUnsavedChanges = false;
+  document.getElementById('unsavedBadge').style.display = 'none';
+}
+
+// Name
+document.getElementById('pName').addEventListener('input', e => {
+  previewName.textContent = e.target.value.trim() || 'Your Name';
+  markUnsaved(); updateCompleteness();
+});
+// Title
+document.getElementById('pTitle').addEventListener('input', e => {
+  previewTitle.textContent = e.target.value.trim() || 'Your Title';
+  markUnsaved(); updateCompleteness();
+});
+// Bio
+document.getElementById('pBio').addEventListener('input', e => {
+  previewBio.textContent = e.target.value.trim() || 'Your short bio will appear here.';
+  markUnsaved(); updateCompleteness();
+});
+// Location
+document.getElementById('pLocation').addEventListener('input', e => {
+  document.getElementById('previewLocation').textContent =
+    e.target.value.trim() ? '📍 ' + e.target.value.trim() : '';
+  markUnsaved(); updateCompleteness();
+});
+// Availability
+document.getElementById('pAvailability').addEventListener('change', e => {
+  const badge = document.getElementById('previewAvailBadge');
+  const map = {
+    available:   { text: '🟢 Available for work',  cls: 'color:var(--success);background:rgba(0,200,150,0.12);border-color:rgba(0,200,150,0.25);' },
+    busy:        { text: '🟡 Currently busy',       cls: 'color:var(--warning);background:rgba(255,183,77,0.12);border-color:rgba(255,183,77,0.25);' },
+    unavailable: { text: '🔴 Not available',        cls: 'color:var(--error);background:rgba(255,83,112,0.12);border-color:rgba(255,83,112,0.25);' },
+  };
+  const m = map[e.target.value];
+  badge.textContent = m.text;
+  badge.style.cssText = `font-size:0.72rem;padding:0.2rem 0.7rem;border-radius:99px;border:1px solid;${m.cls}`;
+  markUnsaved();
+});
+// Years
+document.getElementById('pYearsExp').addEventListener('input', () => { markUnsaved(); updateCompleteness(); });
+// All other fields
+['pEmail','pLongBio'].forEach(id =>
+  document.getElementById(id)?.addEventListener('input', () => { markUnsaved(); updateCompleteness(); })
+);
+
+// Social links → preview chips
+const SOCIAL_ICONS = {
+  pGithub:     { label: 'GitHub',   icon: '🐙' },
+  pLinkedin:   { label: 'LinkedIn', icon: '💼' },
+  pTwitter:    { label: 'Twitter',  icon: '🐦' },
+  pWebsite:    { label: 'Website',  icon: '🌐' },
+  pEmailSocial:{ label: 'Email',    icon: '📧' },
+};
+function updateSocialPreview() {
+  previewLinks.innerHTML = '';
+  Object.entries(SOCIAL_ICONS).forEach(([id, meta]) => {
+    const val = document.getElementById(id)?.value?.trim();
+    if (val) {
+      previewLinks.innerHTML +=
+        `<span class="preview-link-chip">${meta.icon} ${meta.label}</span>`;
+    }
+  });
+}
+Object.keys(SOCIAL_ICONS).forEach(id => {
+  document.getElementById(id)?.addEventListener('input', () => {
+    updateSocialPreview(); markUnsaved(); updateCompleteness();
+  });
+});
+
+// ── Image upload ──────────────────────────────────────────────
+const imgFile    = document.getElementById('imgFile');
+const imgPreview = document.getElementById('imgPreview');
+const previewImg = document.getElementById('previewImg');
+let existingImageUrl = null;
 
 wireImagePreview(imgFile, previewImg, imgPreview);
 
-// Also update the mini avatar in the preview card
 imgFile.addEventListener('change', () => {
   const file = imgFile.files[0];
   if (!file) return;
   document.getElementById('previewFileName').textContent = file.name;
   const url = URL.createObjectURL(file);
-  const avatarWrap = document.getElementById('previewAvatarWrap');
-  avatarWrap.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;" />`;
+  // Update the sticky preview avatar
+  previewAvatar.innerHTML = `<img src="${url}" alt="Preview" />`;
+  // Update the current photo display in the tab
+  document.getElementById('currentPhotoDisplay').innerHTML =
+    `<img src="${url}" style="width:100%;height:100%;object-fit:cover;" />`;
+  markUnsaved(); updateCompleteness();
 });
 
 document.getElementById('removeImg').addEventListener('click', () => {
   imgFile.value = '';
   imgPreview.style.display = 'none';
   previewImg.src = '';
-  document.getElementById('previewAvatarWrap').innerHTML = '🧑‍💻';
+  previewAvatar.innerHTML = '🧑‍💻';
+  document.getElementById('currentPhotoDisplay').innerHTML = '🧑‍💻';
+  markUnsaved(); updateCompleteness();
 });
 
-/* ── Load existing profile ──────────────────────────── */
-let existingImageUrl = null;
+// Drag & drop
+const fileDrop = document.getElementById('fileDrop');
+fileDrop.addEventListener('dragover',  e => { e.preventDefault(); fileDrop.classList.add('drag-over'); });
+fileDrop.addEventListener('dragleave', ()  => fileDrop.classList.remove('drag-over'));
+fileDrop.addEventListener('drop', e => {
+  e.preventDefault(); fileDrop.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file?.type?.startsWith('image/')) {
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    imgFile.files = dt.files;
+    imgFile.dispatchEvent(new Event('change'));
+  }
+});
 
+// ── Load existing profile ─────────────────────────────────────
 async function loadProfile() {
   showLoading('Loading profile…');
   const { data } = await fetchProfile();
   hideLoading();
-  if (!data) return;
+  if (!data) { updateCompleteness(); return; }
 
-  document.getElementById('profileId').value = data.id;
-  document.getElementById('pName').value     = data.name   ?? '';
-  document.getElementById('pBio').value      = data.bio    ?? '';
+  // Populate fields
+  document.getElementById('profileId').value = data.id ?? '';
+  document.getElementById('pName').value     = data.name    ?? '';
+  document.getElementById('pTitle').value    = data.title   ?? '';
+  document.getElementById('pBio').value      = data.bio     ?? '';
+  document.getElementById('pLongBio').value  = data.long_bio ?? '';
+  document.getElementById('pLocation').value = data.location ?? '';
+  document.getElementById('pEmail').value    = data.contact_email ?? '';
+  document.getElementById('pYearsExp').value = data.years_exp ?? '';
+  if (data.availability) document.getElementById('pAvailability').value = data.availability;
 
-  document.getElementById('previewName').textContent = data.name  ?? 'Your Name';
-  document.getElementById('previewBio').textContent  = data.bio   ?? 'Your bio will appear here.';
+  // Social links
+  document.getElementById('pGithub').value      = data.github   ?? '';
+  document.getElementById('pLinkedin').value    = data.linkedin ?? '';
+  document.getElementById('pTwitter').value     = data.twitter  ?? '';
+  document.getElementById('pWebsite').value     = data.website  ?? '';
+  document.getElementById('pEmailSocial').value = data.email_social ?? '';
 
+  // Update live preview
+  previewName.textContent  = data.name  || 'Your Name';
+  previewTitle.textContent = data.title || 'Your Title';
+  previewBio.textContent   = data.bio   || 'Your short bio will appear here.';
+  if (data.location) {
+    document.getElementById('previewLocation').textContent = '📍 ' + data.location;
+  }
+
+  // Photo
   if (data.image_url) {
     existingImageUrl = data.image_url;
-    document.getElementById('existingImg').src = data.image_url;
+    previewAvatar.innerHTML = `<img src="${data.image_url}" alt="Profile" />`;
+    document.getElementById('currentPhotoDisplay').innerHTML =
+      `<img src="${data.image_url}" style="width:100%;height:100%;object-fit:cover;" />`;
     document.getElementById('existingImgWrap').style.display = 'block';
-
-    const avatarWrap = document.getElementById('previewAvatarWrap');
-    avatarWrap.innerHTML = `<img src="${data.image_url}" style="width:100%;height:100%;object-fit:cover;" />`;
   }
+
+  // Availability badge
+  document.getElementById('pAvailability').dispatchEvent(new Event('change'));
+
+  updateSocialPreview();
+  updateCompleteness();
+  // Re-run char counters
+  ['pName','pTitle','pBio','pLongBio'].forEach(id =>
+    document.getElementById(id).dispatchEvent(new Event('input'))
+  );
 }
 
-/* ── Form submit ────────────────────────────────────── */
+// ── Reset button ──────────────────────────────────────────────
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if (!hasUnsavedChanges) return;
+  if (!confirm('Discard all unsaved changes?')) return;
+  loadProfile();
+  clearUnsaved();
+});
+
+// ── Unsaved warning on page leave ────────────────────────────
+window.addEventListener('beforeunload', e => {
+  if (hasUnsavedChanges) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+// ── Form submit ───────────────────────────────────────────────
 const profileForm = document.getElementById('profileForm');
 const saveBtn     = document.getElementById('saveBtn');
 
@@ -225,26 +845,26 @@ profileForm.addEventListener('submit', async (e) => {
 
   setBtnLoading(saveBtn, true, 'Saving…');
 
-  const name   = document.getElementById('pName').value.trim();
-  const bio    = document.getElementById('pBio').value.trim();
-  const id     = document.getElementById('profileId').value || undefined;
-  const file   = imgFile.files[0];
+  const id    = document.getElementById('profileId').value || undefined;
+  const file  = imgFile.files[0];
   const removeExisting = document.getElementById('removeExistingImg').checked;
+  let   image_url = existingImageUrl;
 
-  let image_url = existingImageUrl;
-
+  // Handle image removal
   if (removeExisting && existingImageUrl) {
     const path = pathFromUrl(existingImageUrl);
     if (path) await deleteImage(path);
     image_url = null;
   }
 
+  // Handle new upload
   if (file) {
     if (file.size > 5 * 1024 * 1024) {
       showToast('Image must be under 5 MB.', 'error');
       setBtnLoading(saveBtn, false);
       return;
     }
+    // Delete old image if replacing (and not already removed)
     if (existingImageUrl && !removeExisting) {
       const oldPath = pathFromUrl(existingImageUrl);
       if (oldPath) await deleteImage(oldPath);
@@ -257,22 +877,48 @@ profileForm.addEventListener('submit', async (e) => {
       return;
     }
     image_url = url;
+    existingImageUrl = url;
   }
 
-  const payload = { name, bio, image_url };
+  // Build payload — maps to Supabase profile table columns
+  const payload = {
+    name:          document.getElementById('pName').value.trim(),
+    title:         document.getElementById('pTitle').value.trim(),
+    bio:           document.getElementById('pBio').value.trim(),
+    long_bio:      document.getElementById('pLongBio').value.trim(),
+    location:      document.getElementById('pLocation').value.trim(),
+    contact_email: document.getElementById('pEmail').value.trim(),
+    years_exp:     document.getElementById('pYearsExp').value || null,
+    availability:  document.getElementById('pAvailability').value,
+    github:        document.getElementById('pGithub').value.trim(),
+    linkedin:      document.getElementById('pLinkedin').value.trim(),
+    twitter:       document.getElementById('pTwitter').value.trim(),
+    website:       document.getElementById('pWebsite').value.trim(),
+    email_social:  document.getElementById('pEmailSocial').value.trim(),
+    image_url,
+  };
   if (id) payload.id = id;
 
-  const { error } = await upsertProfile(payload);
+  const { data: saved, error } = await upsertProfile(payload);
 
   setBtnLoading(saveBtn, false);
 
   if (error) {
-    showToast('Error: ' + error.message, 'error');
+    showToast('Error saving profile: ' + error.message, 'error');
   } else {
-    showToast('Profile saved! ✅', 'success');
+    // Store returned id for future updates
+    if (saved?.id) document.getElementById('profileId').value = saved.id;
+    clearUnsaved();
+    // Flash the preview card
+    const card = document.getElementById('previewCard');
+    card.classList.add('save-flash');
+    card.addEventListener('animationend', () => card.classList.remove('save-flash'), { once: true });
+    showToast('Profile saved successfully! ✅', 'success');
+    updateCompleteness();
   }
 });
 
+// ── Init ──────────────────────────────────────────────────────
 loadProfile();
 </script>
 </body>
